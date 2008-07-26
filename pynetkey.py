@@ -48,7 +48,7 @@ elif platform.system() == "Linux":
 else:
 	raise Exception(platform.system()+" not supported")
 
-refresh_frequency = 9*60
+refresh_frequency = 5*60
 #~ refresh_frequency = 1.0
 usage_query_frequency = 1*60
 
