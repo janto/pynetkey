@@ -2,7 +2,7 @@
 
 """Inetkey in Python.
 
-	Janto Dreijer <janto@sun.ac.za>
+	Janto Dreijer <jantod@gmail.com>
 
 """
 
@@ -20,6 +20,12 @@ import platform
 
 import sys
 import os.path
+
+# determine root directory
+root_dir = os.path.abspath(sys.path[0]) # can't use __file__ with py2exe
+if os.path.isfile(root_dir): # py2exe gives library.zip as path[0]
+	root_dir = os.path.dirname(root_dir)
+assert os.path.exists(os.path.join(root_dir, "icons")), root_dir
 
 if platform.system() in ("Windows", "Microsoft"):
 	import win32api
@@ -82,7 +88,7 @@ class ConnectionException(Exception):
 	pass
 
 def get_icon(name):
-	return os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons/%s.ico" % name)
+	return os.path.join(root_dir, "icons/%s.ico" % name)
 
 def get_usage(username, password):
 	url = "https://maties2.sun.ac.za/fwusage/"

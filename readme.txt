@@ -3,7 +3,7 @@ jantod@gmail.com
 
 contact
 =====
-- janto@sun.ac.za
+- jantod@gmail.com
 
 Build requirements
 ============

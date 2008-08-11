@@ -16,6 +16,6 @@ setup(
 	# targets to build
 	windows = [{
 		"script": "pynetkey.py",
-		"icon_resources": [(1, "icons/orange.ico")] # application icon
+		"icon_resources": [(1, "icons/main.ico")] # application icon
 	}],
 )

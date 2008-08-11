@@ -263,7 +263,7 @@ def prompt_username_password():
 		return 9+24*n
 	template = [
 		["pynetkey %s" % __init__.version, (200, 200, 156, line(4)), -2134376256, None, (8, 'MS Sans Serif')],
-		[130, "This program was not made by IT and is not supported by IT! -janto@sun.ac.za", -1, (7, line(0), 150, 30), 1342177280, 0],
+		[130, "This program was not made by IT and is not supported by IT! -jantod@gmail.com", -1, (7, line(0), 150, 30), 1342177280, 0],
 		[130, 'Username:', -1, (7, line(1), 43, 10), 1342177280, 0],
 		[129, '', 1000, (59, line(1)-2, 59, 14), 1350631552, 0],
 		[130, 'Password:', -1, (7, line(2), 43, 10), 1342177280, 0],
