@@ -6,7 +6,7 @@
 
 """
 
-from __future__ import division
+from __future__ import division, with_statement
 
 import urllib2, urllib
 import logging
@@ -54,7 +54,7 @@ elif platform.system() == "Linux":
 else:
 	raise Exception(platform.system()+" not supported")
 
-refresh_frequency = 5*60
+refresh_frequency = 6*60
 #~ refresh_frequency = 1.0
 usage_query_frequency = 1*60
 
@@ -131,19 +131,15 @@ class Statistics(object):
 			d["refreshes"] = len(self.open_events)
 		return "{%s}" % ", ".join("'%s':'%s'" % (k, str(v)) for k, v in d.items())
 
-	def dump_to_file(self, filename="stats.txt"):
-		f = file(filename, "a+")
-		f.write("%s\n" % self)
-		f.close()
-		f = file("opens.txt", "w")
-		f.write("\n".join([" ".join(str(t)) for t in self.open_events]))
-		f.close()
-		f = file("closes.txt", "w")
-		f.write("\n".join([" ".join(str(t)) for t in self.close_events]))
-		f.close()
-		f = file("errors.txt", "w")
-		f.write("\n".join([" ".join(str(t)) for t in self.error_events]))
-		f.close()
+	def dump_to_file(self):
+		with file(os.path.join(root_dir, "stats.txt"), "a+") as f:
+			f.write("%s\n" % self)
+		with file(os.path.join(root_dir, "opens.txt"), "a+") as f:
+			f.write("\n".join([" ".join(str(t)) for t in self.open_events]))
+		with file(os.path.join(root_dir, "closes.txt"), "a+") as f:
+			f.write("\n".join([" ".join(str(t)) for t in self.close_events]))
+		with file(os.path.join(root_dir, "errors.txt"), "a+") as f:
+			f.write("\n".join([" ".join(str(t)) for t in self.error_events]))
 
 class Inetkey(object):
 
