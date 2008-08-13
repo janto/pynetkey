@@ -7,10 +7,9 @@ contact
 
 Build requirements
 ============
-- python2.4
+- python2.5
 - py2exe
-- win32all
-- ctypes
+- pywin32
 
 Settings
 =====
