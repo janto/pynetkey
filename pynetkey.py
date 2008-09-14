@@ -42,7 +42,14 @@ if platform.system() in ("Windows", "Microsoft"):
 		hDesktop = OpenDesktop("default", 0, False, DESKTOP_SWITCHDESKTOP)
 		result = SwitchDesktop(hDesktop)
 		return not result # no active desktop
-		
+
+#~ elif platform.system() == "Linux":
+	#~ from wxtrayicon import TrayIcon, prompt_username_password
+	#~ def open_url(url):
+		#~ os.system('gnome-open %s' % url)
+	#~ def workstation_is_locked():
+		#~ return False
+
 elif platform.system() == "Linux":
 	from gtktrayicon import prompt_username_password
 	from gtktrayicon import GtkTrayIcon as TrayIcon
@@ -87,8 +94,13 @@ class ReTimer(Thread):
 class ConnectionException(Exception):
 	pass
 
+icon_color_mapping = dict(blue=101, green=102, orange=103, red=104, yellow=105)
+
 def get_icon(name):
-	return os.path.join(root_dir, "icons/%s.ico" % name)
+	filename = os.path.join(root_dir, "icons/%s.ico" % name)
+	if os.path.exists(filename):
+		return filename
+	return icon_color_mapping[name] # try icon in exe
 
 def get_usage(username, password):
 	url = "https://maties2.sun.ac.za/fwusage/"
@@ -106,17 +118,17 @@ class Statistics(object):
 
 	def __init__(self):
 		self.open_events = []
-		self.close_events = []
-		self.error_events = []
+		self.events = []
 
 	def firewall_open(self):
 		self.open_events.append(localtime())
+		self.events.append((localtime(), "open"))
 
 	def firewall_closed(self):
-		self.close_events.append(localtime())
+		self.events.append((localtime(), "close"))
 
 	def firewall_error(self, text):
-		self.error_events.append((localtime(), text))
+		self.events.append((localtime(), "error", text))
 
 	def __str__(self):
 		d = {}
@@ -132,14 +144,10 @@ class Statistics(object):
 		return "{%s}" % ", ".join("'%s':'%s'" % (k, str(v)) for k, v in d.items())
 
 	def dump_to_file(self):
-		with file(os.path.join(root_dir, "stats.txt"), "a+") as f:
+		with file(os.path.join(root_dir, "stats.log"), "a+") as f:
 			f.write("%s\n" % self)
-		with file(os.path.join(root_dir, "opens.txt"), "a+") as f:
-			f.write("\n".join([" ".join(str(t)) for t in self.open_events]))
-		with file(os.path.join(root_dir, "closes.txt"), "a+") as f:
-			f.write("\n".join([" ".join(str(t)) for t in self.close_events]))
-		with file(os.path.join(root_dir, "errors.txt"), "a+") as f:
-			f.write("\n".join([" ".join(str(t)) for t in self.error_events]))
+			for event in self.events:
+				f.write("%s\n" % event)
 
 class Inetkey(object):
 
@@ -211,18 +219,6 @@ class Inetkey(object):
 			#~ self.logger.info("close_on_workstation_locked=%s" % self.close_on_workstation_locked)
 			#~ print "close_on_workstation_locked=%s" % self.close_on_workstation_locked
 
-		#~ menu_options.append(("Toggle FireWall", None, toggle_connection_state))
-		#~ menu_options.append(("Open FireWall", get_icon("green"), lambda a: self.open_firewall()))
-		#~ menu_options.append(("Close FireWall", get_icon("orange"), lambda a: self.close_firewall()))
-		#~ menu_options.append(("-", None, None))
-		#~ menu_options.append(("Close on Workstation Lock", lambda: self.close_on_workstation_locked, toggle_close_on_workstation_locked))
-		#~ menu_options.append(("Change user...", None, change_user))
-		#~ menu_options.append(("-", None, None))
-		#~ menu_options.append(("User admin page...", None, lambda a: win32api.ShellExecute(0,None,"http://www.sun.ac.za/useradm",None,None,1)))
-		#~ menu_options.append(("Tariff structure...", None, lambda a: win32api.ShellExecute(0,None,"http://infoteg.sun.ac.za/infoteg/IN_Tariewe_E.htm",None,None,1)))
-		#~ menu_options.append(("-", None, None))
-		#~ menu_options = tuple(menu_options)
-		#~ SysTrayIcon(get_icon("blue"), "pynetkey", menu_options, on_quit=on_quit, default_menu_index=0, call_on_startup=self.startup)
 		menu_options = []
 		menu_options.append(("Toggle FireWall", None, toggle_connection_state))
 		menu_options.append(("Open FireWall", get_icon("green"), lambda a: self.open_firewall()))

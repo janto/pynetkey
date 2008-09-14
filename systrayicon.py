@@ -107,17 +107,20 @@ class SysTrayIcon(object):
 	def refresh_icon(self, recreate=False):
 		# Try and find a custom icon
 		hinst = win32gui.GetModuleHandle(None)
-		if os.path.isfile(self.icon):
-			icon_flags = win32con.LR_LOADFROMFILE | win32con.LR_DEFAULTSIZE
-			hicon = win32gui.LoadImage(hinst,
-									   self.icon,
-									   win32con.IMAGE_ICON,
-									   0,
-									   0,
-									   icon_flags)
+		if isinstance(self.icon, str):
+			if os.path.isfile(self.icon):
+				icon_flags = win32con.LR_LOADFROMFILE | win32con.LR_DEFAULTSIZE
+				hicon = win32gui.LoadImage(hinst,
+					self.icon,
+					win32con.IMAGE_ICON,
+					0,
+					0,
+					icon_flags)
+			else:
+				hicon = win32gui.LoadIcon(0, win32con.IDI_APPLICATION)
 		else:
-			print "Can't find icon file - using default."
-			hicon = win32gui.LoadIcon(0, win32con.IDI_APPLICATION)
+			hinst = win32api.GetModuleHandle(None)
+			hicon = win32gui.LoadIcon(hinst, int(self.icon))
 
 		if not self.notify_id or recreate:
 			message = win32gui.NIM_ADD
@@ -129,7 +132,10 @@ class SysTrayIcon(object):
 						  win32con.WM_USER+20,
 						  hicon,
 						  self.hover_text)
-		win32gui.Shell_NotifyIcon(message, self.notify_id)
+		try:
+			win32gui.Shell_NotifyIcon(message, self.notify_id)
+		except: # just catch strange error
+			pass
 
 	def set_icon(self, filename, hover_text=None):
 		if hover_text is not None:
