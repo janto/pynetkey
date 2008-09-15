@@ -44,7 +44,7 @@ if platform.system() in ("Windows", "Microsoft"):
 		return not result # no active desktop
 
 #~ elif platform.system() == "Linux":
-	#~ from wxtrayicon import TrayIcon, prompt_username_password
+	#~ from wxtrayicon import TrayIcon, prompt_username_password, gui_quit
 	#~ def open_url(url):
 		#~ os.system('gnome-open %s' % url)
 	#~ def workstation_is_locked():
