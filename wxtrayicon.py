@@ -1,3 +1,5 @@
+#XXX not working yet. fix it if you need it.
+
 import wx
 
 class TaskBarIcon(wx.TaskBarIcon):
