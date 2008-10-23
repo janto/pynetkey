@@ -43,7 +43,7 @@ if platform.system() in ("Windows", "Microsoft"):
 		result = SwitchDesktop(hDesktop)
 		return not result # no active desktop
 
-#~ elif platform.system() == "Linux":
+#~ elif platform.system() == "Linux": #XXX and mac?
 	#~ from wxtrayicon import TrayIcon, prompt_username_password, gui_quit
 	#~ def open_url(url):
 		#~ os.system('gnome-open %s' % url)

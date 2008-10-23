@@ -1,4 +1,4 @@
-#XXX not working yet. fix it if you need it.
+#XXX busy. not yet working.
 
 import wx
 
@@ -60,6 +60,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 		wx.GetApp().ProcessIdle()
 
 class TaskBarApp(wx.Frame):
+	
 	def __init__(self, parent, id, title, menu_options=None, on_quit=None):
 		wx.Frame.__init__(self, parent, -1, title, size = (1, 1),
 		    style=wx.FRAME_NO_TASKBAR|wx.NO_FULL_REPAINT_ON_RESIZE)
@@ -98,7 +99,7 @@ class TrayIcon(object):
 		app.frame.Center(wx.BOTH)
 		app.frame.Show(False)
 		print 1
-		#~ startup(self)
+		startup(self)
 		print 2
 		app.MainLoop()
 
@@ -111,8 +112,52 @@ class TrayIcon(object):
 def gui_quit():
 	pass
 
+class LoginDialog(wx.Dialog):
+	def __init__(self, parent, id=-1, title="Login", pos=wx.DefaultPosition, size=wx.Size(250, 150)):
+		
+		wx.Dialog.__init__(self, parent, id, title, pos, size)
+		wx.StaticText(self, -1, 'Please type your user name and password.', wx.Point(15, 5))
+		wx.StaticText(self, -1, 'User name: ', wx.Point(20, 30))
+		wx.StaticText(self, -1, 'Password: ', wx.Point(20, 55))
+		
+		self.nameBox = wx.TextCtrl(self, -1, '', wx.Point(80,30), wx.Size(120, -1))
+		self.passwordBox = wx.TextCtrl(self, -1, '', wx.Point(80,55), wx.Size(120, -1), style=wx.TE_PASSWORD)
+		wx.Button(self, wx.ID_OK, ' OK ', wx.Point(35, 90), wx.DefaultSize).SetDefault()
+		wx.Button(self, wx.ID_CANCEL, ' Cancel ', wx.Point(135, 90), wx.DefaultSize)
+
+	def GetUser(self):
+		val = self.ShowModal()
+		if val == wx.ID_OK:
+			return self.nameBox.GetValue(), self.passwordBox.GetValue()
+		else:
+			return None, None
+
+import time
+import os.path
+from ConfigParser import ConfigParser
 def prompt_username_password():
-	return "user", "pass"
+	config = ConfigParser()
+	filename = os.path.expanduser("~/.inetkeyrc")
+	try:
+		#~ 1/0
+		assert os.path.exists(filename), "can't find '%s'" % filename
+		config.read(filename)
+		return config.get("config", "username"), config.get("config", "password")
+	except Exception, e:
+		print e
+		
+		app = wx.GetApp() or wx.App(0)
+		main = wx.Frame(None, -1, "pynetkey prompt", size = (1, 1),
+		    style=wx.FRAME_NO_TASKBAR|wx.NO_FULL_REPAINT_ON_RESIZE)
+		app.SetTopWindow(main)
+		login = LoginDialog(main)
+		main.Center(wx.BOTH)
+		main.Show(False)
+		username, password = login.GetUser()
+		print username, password
+		#~ app.MainLoop()
+		main.Close()
+		return username, password
 
 def main():
 	tray = TrayIcon()
