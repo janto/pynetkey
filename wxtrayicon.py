@@ -65,8 +65,6 @@ class TaskBarApp(wx.Frame):
 		wx.Frame.__init__(self, parent, -1, title, size = (1, 1),
 		    style=wx.FRAME_NO_TASKBAR|wx.NO_FULL_REPAINT_ON_RESIZE)
 		self.tbicon = TaskBarIcon(frame=self, menu_options=menu_options, on_quit=on_quit)
-		icon = wx.Icon("icons/orange.ico", wx.BITMAP_TYPE_ICO)
-		self.tbicon.SetIcon(icon, '')
 		self.tbicon.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
 		#~ self.tbicon.Bind(wx.EVT_TASKBAR_RIGHT_UP, self.OnTaskBarRightClick)
 		self.Show(True)
