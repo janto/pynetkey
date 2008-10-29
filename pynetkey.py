@@ -154,7 +154,9 @@ class Inetkey(object):
 	def __init__(self, username, password, open_on_launch=True):
 		self.logger = logging.getLogger("Inetkey")
 		self.statistics = Statistics()
-		self.url = "https://fw0.sun.ac.za:950"
+		#~ self.url = "https://fw0.sun.ac.za:950"
+		self.url = "https://fw.sun.ac.za:950"
+		#~ self.url = "https://146.232.128.17:950"
 		self.username = username
 		self.password = password
 		self.open_on_launch = open_on_launch
