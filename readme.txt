@@ -11,6 +11,8 @@ windows build requirements
 - py2exe
 - pywin32
 
+Run build.bat to create distribution.
+
 installation (Windows)
 ==============
 1) extract somewhere and run pynetkey.exe
@@ -36,7 +38,7 @@ Example::
 	username=12345678
 	password=supersecret
 
-The password will automatically be encoded (not encrypted) to prevent wandering eyes from steeling your password.
+The password will automatically be encoded (not encrypted) to prevent wandering eyes from stealing your password.
 
 todo
 ===
