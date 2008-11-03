@@ -112,7 +112,11 @@ def get_usage(username, password):
 	opener = FancyURLopener(proxies={})
 	result = opener.open(url)
 	data = result.read()
-	return re.findall('<td align="right"><font size="1">(.*)</font></td>', data)[-1]
+	
+	result = re.findall('<td align="right"><font size="1">(.*)</font></td>', data)
+	if result:
+		return result[-1]
+	return None
 
 class Statistics(object):
 
@@ -173,7 +177,9 @@ class Inetkey(object):
 		self.refresher = ReTimer(refresh_frequency, refresh)
 		def check_usage():
 			try:
-				self.systrayicon.set_hover_text("R%s" % get_usage(self.username, self.password))
+				usage = get_usage(self.username, self.password)
+				if usage:
+					self.systrayicon.set_hover_text("R%s" % usage)
 			except Exception, e:
 				self.systrayicon.set_hover_text(str(e))
 				#~ self.systrayicon.set_hover_text("cannot determine firewall usage")

@@ -29,3 +29,7 @@ One Linux: ~/.inetkeyrc
 [config]
 username=12345678
 password=supersecret
+
+todo
+===
+calculate optimal reconnection delay
