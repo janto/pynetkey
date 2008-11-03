@@ -11,6 +11,10 @@ windows build requirements
 - py2exe
 - pywin32
 
+installation (Windows)
+==============
+1) extract somewhere and run pynetkey.exe
+
 installation (Debian)
 =============
 
@@ -21,14 +25,18 @@ installation (Debian)
 settings
 =====
 
-To avoid prompting for username/password you can place it in a config file:
+To avoid prompting for username/password every time you can place it in a config file.
 
 On Windows: ~\inetkey.ini (e.g. "C:\Documents and Settings\username\inetkey.ini")
-One Linux: ~/.inetkeyrc
+On Linux: ~/.inetkeyrc
 
-[config]
-username=12345678
-password=supersecret
+Example::
+
+	[config]
+	username=12345678
+	password=supersecret
+
+The password will automatically be encoded (not encrypted) to prevent wandering eyes from steeling your password.
 
 todo
 ===

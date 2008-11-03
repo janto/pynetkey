@@ -21,6 +21,9 @@ import platform
 import sys
 import os.path
 
+refresh_frequency = 6*60
+usage_query_frequency = 1*60
+
 # determine root directory
 root_dir = os.path.abspath(sys.path[0]) # can't use __file__ with py2exe
 if os.path.isfile(root_dir): # py2exe gives library.zip as path[0]
@@ -29,7 +32,7 @@ assert os.path.exists(os.path.join(root_dir, "icons")), root_dir
 
 if platform.system() in ("Windows", "Microsoft"):
 	import win32api
-	from systrayicon import prompt_username_password, TrayIcon
+	from systrayicon import password_dialog, TrayIcon
 	def gui_quit():
 		pass
 	def open_url(url):
@@ -42,28 +45,27 @@ if platform.system() in ("Windows", "Microsoft"):
 		hDesktop = OpenDesktop("default", 0, False, DESKTOP_SWITCHDESKTOP)
 		result = SwitchDesktop(hDesktop)
 		return not result # no active desktop
+	config_filename = os.path.expanduser("~\\inetkey.ini")
 
 #~ elif platform.system() == "Linux": #XXX and mac?
-	#~ from wxtrayicon import TrayIcon, prompt_username_password, gui_quit
+	#~ from wxtrayicon import TrayIcon, password_dialog, gui_quit
 	#~ def open_url(url):
 		#~ os.system('gnome-open %s' % url)
 	#~ def workstation_is_locked():
 		#~ return False
 
 elif platform.system() == "Linux":
-	from gtktrayicon import prompt_username_password
+	from gtktrayicon import password_dialog
 	from gtktrayicon import GtkTrayIcon as TrayIcon
 	from gtk import main_quit as gui_quit
 	def open_url(url):
 		os.system('gnome-open %s' % url)
 	def workstation_is_locked():
 		return False
+	config_filename = os.path.expanduser("~/.inetkeyrc")
+	
 else:
 	raise Exception(platform.system()+" not supported")
-
-refresh_frequency = 6*60
-#~ refresh_frequency = 1.0
-usage_query_frequency = 1*60
 
 class ReTimer(Thread):
 
@@ -101,6 +103,34 @@ def get_icon(name):
 	if os.path.exists(filename):
 		return filename
 	return icon_color_mapping[name] # try icon in exe
+
+from ConfigParser import ConfigParser
+import base64
+import stat
+def prompt_username_password(force_prompt=False):
+	config = ConfigParser()
+	if not force_prompt and os.path.exists(config_filename):
+		
+		# make file user-level read/write only
+		os.chmod(config_filename, stat.S_IRUSR | stat.S_IWUSR)
+		
+		# process config file
+		config.read(config_filename)
+		password = config.get("config", "password")
+		if password: # provided as plaintext
+			encoded_password = base64.b32encode(password)
+			config.set("config", "encoded_password_b32", encoded_password)
+			config.set("config", "password", "") # clear plaintext
+			# save encoded password
+			with file(config_filename, "w") as f:
+				config.write(f)
+			
+		else:
+			encoded_password = config.get("config", "encoded_password_b32")
+			password = base64.b32decode(encoded_password)
+
+		return config.get("config", "username"), password
+	return password_dialog()
 
 def get_usage(username, password):
 	url = "https://maties2.sun.ac.za/fwusage/"
@@ -217,7 +247,7 @@ class Inetkey(object):
 				gui_quit()
 				return 1
 		def change_user(event):
-			username, password = prompt_username_password()
+			username, password = prompt_username_password(force_prompt=True)
 			if username and password:
 				self.close_firewall()
 				self.username, self.password = username, password
@@ -232,7 +262,8 @@ class Inetkey(object):
 		menu_options.append(("Open FireWall", get_icon("green"), lambda a: self.open_firewall()))
 		menu_options.append(("Close FireWall", get_icon("orange"), lambda a: self.close_firewall()))
 		menu_options.append(("-", None, None))
-		menu_options.append(("Close on Workstation Lock", lambda: self.close_on_workstation_locked, toggle_close_on_workstation_locked))
+		if platform.system() in ("Windows", "Microsoft"):
+			menu_options.append(("Close on Workstation Lock", lambda: self.close_on_workstation_locked, toggle_close_on_workstation_locked))
 		menu_options.append(("Change user...", None, change_user))
 		menu_options.append(("-", None, None))
 		menu_options.append(("User admin page...", None, lambda a: open_url('http://www.sun.ac.za/useradm')))

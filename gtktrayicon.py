@@ -1,6 +1,11 @@
 #! /usr/bin/python
+
+from __future__ import with_statement
 import gtk
-import egg.trayicon
+try:
+	import egg.trayicon
+except ImportError:
+	raise Exception('your probably need to run "sudo apt-get install python-gtk2 python-gnome2-extras"')
 
 class GtkTrayIcon:
 	def button_press_callback(self, widget, event):
@@ -20,7 +25,7 @@ class GtkTrayIcon:
 		self.tooltips = gtk.Tooltips()
 		self.tooltips.set_tip(self.icon, text)
 
-	def construct(self, menu_options, on_quit=lambda s:None, startup=None):
+	def construct(self, menu_options, on_quit=lambda :None, startup=None):
 		menu_options.append(("Quit", None, lambda a: on_quit()))
 		# creates the tray icon
 		self.icon = egg.trayicon.TrayIcon("inetkey")
@@ -52,26 +57,19 @@ class GtkTrayIcon:
 			startup(self)
 		# runs the main loop
 		
-		gtk.threads_init()
-		gtk.threads_enter()
+		#~ gtk.threads_init()
+		#~ gtk.threads_enter()
+		#~ gtk.main()
+		#~ gtk.threads_leave()
+		
+		gtk.gdk.threads_enter()
 		gtk.main()
-		gtk.threads_leave()
+		gtk.gdk.threads_leave()
 
-import time
-import os.path
-from ConfigParser import ConfigParser
-def prompt_username_password():
-	config = ConfigParser()
-	filename = os.path.expanduser("~/.inetkeyrc")
-	try:
-		assert os.path.exists(filename), "can't find '%s'" % filename
-		config.read(filename)
-		return config.get("config", "username"), config.get("config", "password")
-	except Exception, e:
-		print e
-		dialog = PasswordDialog()
-		dialog.read_ready.wait()
-		return dialog.username, dialog.password
+def password_dialog():
+	dialog = PasswordDialog()
+	dialog.read_ready.wait()
+	return dialog.username, dialog.password
 		
 from threading import Event
 class PasswordDialog:
@@ -138,7 +136,7 @@ class PasswordDialog:
 
 
 if __name__ == '__main__':
-	print prompt_username_password()
+	print password_dialog()
 	menu_options = []
 	base = GtkTrayIcon()
 	menu_options.append(("Quit", None, gtk.main_quit))

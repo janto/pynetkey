@@ -19,6 +19,9 @@ try:
 except ImportError:
 	import win32gui
 
+import os.path
+import __init__
+
 class SysTrayIcon(object):
 	'''TODO'''
 	QUIT = 'QUIT'
@@ -253,18 +256,7 @@ def non_string_iterable(obj):
 	else:
 		return not isinstance(obj, basestring)
 
-import os.path
-from ConfigParser import ConfigParser
-import __init__
-def prompt_username_password():
-	config = ConfigParser()
-	filename = os.path.expanduser("~\\inetkey.ini")
-	try:
-		assert os.path.exists(filename), "can't find '%s'" % filename
-		config.read(filename)
-		return config.get("config", "username"), config.get("config", "password")
-	except Exception, e:
-		print e
+def password_dialog():
 	def line(n):
 		return 9+24*n
 	template = [

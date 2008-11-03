@@ -130,32 +130,19 @@ class LoginDialog(wx.Dialog):
 		else:
 			return None, None
 
-import time
-import os.path
-from ConfigParser import ConfigParser
-def prompt_username_password():
-	config = ConfigParser()
-	filename = os.path.expanduser("~/.inetkeyrc")
-	try:
-		#~ 1/0
-		assert os.path.exists(filename), "can't find '%s'" % filename
-		config.read(filename)
-		return config.get("config", "username"), config.get("config", "password")
-	except Exception, e:
-		print e
-		
-		app = wx.GetApp() or wx.App(0)
-		main = wx.Frame(None, -1, "pynetkey prompt", size = (1, 1),
-		    style=wx.FRAME_NO_TASKBAR|wx.NO_FULL_REPAINT_ON_RESIZE)
-		app.SetTopWindow(main)
-		login = LoginDialog(main)
-		main.Center(wx.BOTH)
-		main.Show(False)
-		username, password = login.GetUser()
-		print username, password
-		#~ app.MainLoop()
-		main.Close()
-		return username, password
+def password_dialog():
+	app = wx.GetApp() or wx.App(0)
+	main = wx.Frame(None, -1, "pynetkey prompt", size = (1, 1),
+	    style=wx.FRAME_NO_TASKBAR|wx.NO_FULL_REPAINT_ON_RESIZE)
+	app.SetTopWindow(main)
+	login = LoginDialog(main)
+	main.Center(wx.BOTH)
+	main.Show(False)
+	username, password = login.GetUser()
+	print username, password
+	#~ app.MainLoop()
+	main.Close()
+	return username, password
 
 def main():
 	tray = TrayIcon()
