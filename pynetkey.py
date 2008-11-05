@@ -138,7 +138,7 @@ def get_usage(username, password):
 	class FancyURLopener(urllib.FancyURLopener):
 		def prompt_user_passwd(self, a, b):
 			return username, password
-		
+	
 	opener = FancyURLopener(proxies={})
 	result = opener.open(url)
 	data = result.read()
@@ -206,6 +206,7 @@ class Inetkey(object):
 				self.open_firewall()
 		self.refresher = ReTimer(refresh_frequency, refresh)
 		def check_usage():
+			self.logger.debug("querying usage")
 			try:
 				usage = get_usage(self.username, self.password)
 				if usage:
@@ -366,8 +367,9 @@ def main():
 		# create application
 		inetkey = Inetkey(username, password)
 		inetkey.run()
+		sys.exit() # makes sure everything is dead. get_usage() might take loooong to timeout.
 
 if __name__ == '__main__':
 	logging.root.setLevel(logging.WARN)
-	logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", datefmt="%Y-%M-%d %H:%m")
+	logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M")
 	main()

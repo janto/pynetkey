@@ -55,16 +55,11 @@ class GtkTrayIcon:
 			self.menu.append(item)
 		if startup:
 			startup(self)
-		# runs the main loop
 		
-		#~ gtk.threads_init()
-		#~ gtk.threads_enter()
-		#~ gtk.main()
-		#~ gtk.threads_leave()
+		gtk.gdk.threads_init() #XXX no idea what this does but it makes things work
 		
-		gtk.gdk.threads_enter()
+		# run the main loop
 		gtk.main()
-		gtk.gdk.threads_leave()
 
 def password_dialog():
 	dialog = PasswordDialog()
