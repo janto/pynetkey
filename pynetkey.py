@@ -139,7 +139,7 @@ def get_usage(username, password):
 		def prompt_user_passwd(self, a, b):
 			return username, password
 	
-	opener = FancyURLopener(proxies={})
+	opener = FancyURLopener(proxies={}) # no proxy
 	result = opener.open(url)
 	data = result.read()
 	
@@ -212,7 +212,7 @@ class Inetkey(object):
 				if usage:
 					self.systrayicon.set_hover_text("R%s" % usage)
 			except Exception, e:
-				self.systrayicon.set_hover_text(str(e))
+				self.systrayicon.set_hover_text("error checking usage: "+str(e))
 				#~ self.systrayicon.set_hover_text("cannot determine firewall usage")
 		self.usage_checker = ReTimer(usage_query_frequency, check_usage, immediate=True)
 		self.systrayicon = TrayIcon()

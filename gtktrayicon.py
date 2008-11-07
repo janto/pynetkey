@@ -17,12 +17,13 @@ class GtkTrayIcon:
 
 	def set_icon(self, icon, hover_text=None):
 		if hover_text is not None:
-			self.tooltips = gtk.Tooltips()
+			#~ self.tooltips = gtk.Tooltips()
 			self.tooltips.set_tip(self.icon, hover_text)
 		self.image.set_from_file(icon)
 
 	def set_hover_text(self, text):
-		self.tooltips = gtk.Tooltips()
+		#~ print "text", text
+		#~ self.tooltips = gtk.Tooltips()
 		self.tooltips.set_tip(self.icon, text)
 
 	def construct(self, menu_options, on_quit=lambda :None, startup=None):
