@@ -29,14 +29,21 @@ settings
 
 To avoid prompting for username/password every time you can place it in a config file.
 
-On Windows: ~\inetkey.ini (e.g. "C:\Documents and Settings\username\inetkey.ini")
+On Windows: ~\inetkey.ini (i.e. "C:\Documents and Settings\username\inetkey.ini")
 On Linux: ~/.inetkeyrc
+
+You can also force open and close events at scheduled times. Current implementation is accurate to within 30seconds. Will fix when I have time.
 
 Example::
 
 	[config]
 	username=12345678
 	password=supersecret
+	
+	[events]
+	open = 02:05
+	close = 07:55
+
 
 The password will automatically be encoded (not encrypted) to prevent wandering eyes from stealing your password.
 

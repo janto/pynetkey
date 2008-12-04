@@ -10,6 +10,8 @@ from __future__ import division, with_statement
 
 import urllib2, urllib
 import logging
+logger = logging.getLogger("")
+
 import re
 import signal
 from threading import Thread, Timer, Event
@@ -21,8 +23,11 @@ import platform
 import sys
 import os.path
 
+import time
+
 refresh_frequency = 6*60
 usage_query_frequency = 1*60
+check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
 
 # determine root directory
 root_dir = os.path.abspath(sys.path[0]) # can't use __file__ with py2exe
@@ -108,13 +113,15 @@ from ConfigParser import ConfigParser
 import base64
 import stat
 def prompt_username_password(force_prompt=False):
-	config = ConfigParser()
+	if not force_prompt:
+		logger.debug("reading from %s" % config_filename)
 	if not force_prompt and os.path.exists(config_filename):
 		
 		# make file user-level read/write only
 		os.chmod(config_filename, stat.S_IRUSR | stat.S_IWUSR)
 		
 		# process config file
+		config = ConfigParser()
 		config.read(config_filename)
 		password = config.get("config", "password")
 		if password: # provided as plaintext
@@ -196,6 +203,7 @@ class Inetkey(object):
 		self.open_on_launch = open_on_launch
 		self.firewall_open = False
 		self.close_on_workstation_locked = False
+		
 		def refresh():
 			if self.firewall_open:
 				if self.close_on_workstation_locked:
@@ -205,6 +213,7 @@ class Inetkey(object):
 				self.logger.debug("refreshing connection")
 				self.open_firewall()
 		self.refresher = ReTimer(refresh_frequency, refresh)
+		
 		def check_usage():
 			self.logger.debug("querying usage")
 			try:
@@ -215,6 +224,37 @@ class Inetkey(object):
 				self.systrayicon.set_hover_text("error checking usage: "+str(e))
 				#~ self.systrayicon.set_hover_text("cannot determine firewall usage")
 		self.usage_checker = ReTimer(usage_query_frequency, check_usage, immediate=True)
+		
+		# scheduler
+		#XXX hackish approach to schedule events
+		open_time = None
+		close_time = None
+		if os.path.exists(config_filename):
+			config = ConfigParser()
+			config.read(config_filename)
+			try:
+				open_time = config.get("events", "open", "")
+				close_time = config.get("events", "close", "")
+			except:
+				pass
+		def check_schedule(_prev_check_time=[""]):
+			time_as_text = time.strftime("%H:%M") 
+			if _prev_check_time[0] == time_as_text:
+				return # already checked in this minute
+			self.logger.debug("checking for scheduled open or close")
+			
+			if time_as_text == open_time:
+				self.logger.info("opening as per schedule")
+				self.open_firewall()
+			
+			if time_as_text == close_time:
+				self.logger.info("closing as per schedule")
+				self.close_firewall()
+
+			_prev_check_time[0] = time_as_text
+
+		self.retimer_check_schedule = ReTimer(check_schedule_frequency, check_schedule, immediate=True)
+		
 		self.systrayicon = TrayIcon()
 
 # ---------------
@@ -227,6 +267,7 @@ class Inetkey(object):
 			self.open_firewall()
 		self.refresher.start()
 		self.usage_checker.start()
+		self.retimer_check_schedule.start()
 
 	def shutdown(self):
 		self.refresher.stop()
@@ -340,11 +381,11 @@ class Inetkey(object):
 		self.firewall_open = connected
 		if connected:
 			self.statistics.firewall_open()
-			self.logger.info("open")
+			self.logger.debug("opened")
 			self.systrayicon.set_icon(get_icon("green"), "connection open")
 		else:
 			self.statistics.firewall_closed()
-			self.logger.info("closed")
+			self.logger.debug("closed")
 			self.systrayicon.set_icon(get_icon("orange"), "connection closed")
 
 	def error(self, text):
@@ -353,7 +394,7 @@ class Inetkey(object):
 		self.statistics.firewall_error(text)
 
 	def warn(self, text):
-		self.logger.warn(text)
+		self.logger.debug(text)
 		self.systrayicon.set_icon(get_icon("red"), text)
 
 	def info(self, text):
