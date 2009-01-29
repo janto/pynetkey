@@ -39,7 +39,7 @@ Example::
 	[config]
 	username=12345678
 	password=supersecret
-	
+
 	[events]
 	open = 02:05
 	close = 07:55
@@ -49,4 +49,4 @@ The password will automatically be encoded (not encrypted) to prevent wandering 
 
 todo
 ===
-calculate optimal reconnection delay
+Calculate optimal reconnection delay
