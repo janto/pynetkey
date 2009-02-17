@@ -25,6 +25,8 @@ import os.path
 
 import time
 
+import __init__
+
 refresh_frequency = 6*60
 usage_query_frequency = 1*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
@@ -68,7 +70,7 @@ elif platform.system() == "Linux":
 	def workstation_is_locked():
 		return False
 	config_filename = os.path.expanduser("~/.inetkeyrc")
-	
+
 else:
 	raise Exception(platform.system()+" not supported")
 
@@ -116,10 +118,10 @@ def prompt_username_password(force_prompt=False):
 	if not force_prompt:
 		logger.debug("reading from %s" % config_filename)
 	if not force_prompt and os.path.exists(config_filename):
-		
+
 		# make file user-level read/write only
 		os.chmod(config_filename, stat.S_IRUSR | stat.S_IWUSR)
-		
+
 		# process config file
 		config = ConfigParser()
 		config.read(config_filename)
@@ -131,7 +133,7 @@ def prompt_username_password(force_prompt=False):
 			# save encoded password
 			with file(config_filename, "w") as f:
 				config.write(f)
-			
+
 		else:
 			encoded_password = config.get("config", "encoded_password_b32")
 			password = base64.b32decode(encoded_password)
@@ -145,11 +147,15 @@ def get_usage(username, password):
 	class FancyURLopener(urllib.FancyURLopener):
 		def prompt_user_passwd(self, a, b):
 			return username, password
-	
+
 	opener = FancyURLopener(proxies={}) # no proxy
-	result = opener.open(url)
+	try:
+		result = opener.open(url)
+	except RuntimeError: #maximum recursion depth exceeded
+		# why this sometimes happens is beyond me
+		return None
 	data = result.read()
-	
+
 	result = re.findall('<td align="right"><font size="1">(.*)</font></td>', data)
 	if result:
 		return result[-1]
@@ -203,7 +209,7 @@ class Inetkey(object):
 		self.open_on_launch = open_on_launch
 		self.firewall_open = False
 		self.close_on_workstation_locked = False
-		
+
 		def refresh():
 			if self.firewall_open:
 				if self.close_on_workstation_locked:
@@ -213,7 +219,7 @@ class Inetkey(object):
 				self.logger.debug("refreshing connection")
 				self.open_firewall()
 		self.refresher = ReTimer(refresh_frequency, refresh)
-		
+
 		def check_usage():
 			self.logger.debug("querying usage")
 			try:
@@ -224,7 +230,7 @@ class Inetkey(object):
 				self.systrayicon.set_hover_text("error checking usage: "+str(e))
 				#~ self.systrayicon.set_hover_text("cannot determine firewall usage")
 		self.usage_checker = ReTimer(usage_query_frequency, check_usage, immediate=True)
-		
+
 		# scheduler
 		#XXX hackish approach to schedule events
 		open_time = None
@@ -238,15 +244,15 @@ class Inetkey(object):
 			except:
 				pass
 		def check_schedule(_prev_check_time=[""]):
-			time_as_text = time.strftime("%H:%M") 
+			time_as_text = time.strftime("%H:%M")
 			if _prev_check_time[0] == time_as_text:
 				return # already checked in this minute
 			self.logger.debug("checking for scheduled open or close")
-			
+
 			if time_as_text == open_time:
 				self.logger.info("opening as per schedule")
 				self.open_firewall()
-			
+
 			if time_as_text == close_time:
 				self.logger.info("closing as per schedule")
 				self.close_firewall()
@@ -254,7 +260,7 @@ class Inetkey(object):
 			_prev_check_time[0] = time_as_text
 
 		self.retimer_check_schedule = ReTimer(check_schedule_frequency, check_schedule, immediate=True)
-		
+
 		self.systrayicon = TrayIcon()
 
 # ---------------
@@ -320,6 +326,7 @@ class Inetkey(object):
 	def make_request(self, variables=[]):
 		try:
 			if variables:
+				variables.insert(0, ("client", "pynetkey %s" % __init__.version)) # maybe IT will one day want to block a certain version?
 				request = urllib2.Request(url=self.url, data=urllib.urlencode(variables))
 			else:
 				request = urllib2.Request(url=self.url)
@@ -360,6 +367,7 @@ class Inetkey(object):
 			self.connected(connected=True)
 		except ConnectionException, e:
 			self.error(str(e))
+			#~ raise
 
 	def close_firewall(self):
 		if not self.firewall_open:
