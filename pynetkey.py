@@ -60,6 +60,7 @@ if platform.system() in ("Windows", "Microsoft"):
 		#~ os.system('gnome-open %s' % url)
 	#~ def workstation_is_locked():
 		#~ return False
+	#~ config_filename = os.path.expanduser("~/.inetkeyrc")
 
 elif platform.system() == "Linux":
 	from gtktrayicon import password_dialog
@@ -106,7 +107,7 @@ class ConnectionException(Exception):
 icon_color_mapping = dict(blue=101, green=102, orange=103, red=104, yellow=105)
 
 def get_icon(name):
-	filename = os.path.join(root_dir, "icons/%s.ico" % name)
+	filename = os.path.abspath(os.path.join(root_dir, "icons/%s.ico" % name))
 	if os.path.exists(filename):
 		return filename
 	return icon_color_mapping[name] # try icon in exe
@@ -249,7 +250,7 @@ class Inetkey(object):
 			try:
 				open_time = config.get("events", "open", "")
 				close_time = config.get("events", "close", "")
-			except ConfigParser.NoSectionError:
+			except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
 				pass
 		def check_schedule(_prev_check_time=[""]):
 			time_as_text = time.strftime("%H:%M")
@@ -286,6 +287,7 @@ class Inetkey(object):
 	def shutdown(self):
 		self.refresher.stop()
 		self.usage_checker.stop()
+		self.retimer_check_schedule.stop()
 		self.close_firewall()
 		self.statistics.dump_to_file()
 
@@ -327,7 +329,7 @@ class Inetkey(object):
 		menu_options.append(("Firewall usage...", None, lambda e: open_url('https://maties2.sun.ac.za/fwusage/')))
 		menu_options.append(("Tariff structure...", None, lambda e: open_url('http://infoteg.sun.ac.za/infoteg/IN_Tariewe_E.htm')))
 		menu_options.append(("-", None, None))
-		self.systrayicon.construct(menu_options, startup=self.startup, on_quit=on_quit)
+		self.systrayicon.construct(menu_options, startup=self.startup, on_quit=lambda e: on_quit())
 
 # ---------------
 # networking
@@ -335,7 +337,7 @@ class Inetkey(object):
 	def make_request(self, variables=[]):
 		try:
 			if variables:
-				variables.insert(0, ("client", "pynetkey %s" % __init__.version)) # maybe IT will one day want to block a certain version?
+				variables.insert(0, ("client", "pynetkey %s" % __init__.version)) # maybe IT will one day want to block a specific version?
 				request = urllib2.Request(url=self.url, data=urllib.urlencode(variables))
 			else:
 				request = urllib2.Request(url=self.url)

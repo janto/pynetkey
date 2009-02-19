@@ -154,7 +154,8 @@ class SysTrayIcon(object):
 		self.refresh_icon(recreate=True)
 
 	def destroy(self, hwnd, msg, wparam, lparam):
-		if self.on_quit: self.on_quit(self)
+		if self.on_quit:
+			self.on_quit(self)
 		nid = (self.hwnd, 0)
 		win32gui.Shell_NotifyIcon(win32gui.NIM_DELETE, nid)
 		win32gui.PostQuitMessage(0) # Terminate the app.
@@ -297,18 +298,19 @@ class TrayIcon:
 # Minimal self test. You'll need a bunch of ICO files in the icons directory in order for this to work...
 if __name__ == '__main__':
 	import itertools, glob
-	print prompt_username_password()
-	icons = itertools.cycle(glob.glob('icons\\*.ico'))
+	#~ print prompt_username_password()
+	icons = itertools.imap(os.path.abspath, itertools.cycle(glob.glob('icons\\*.ico')))
 	hover_text = "SysTrayIcon.py Demo"
 	def hello(sysTrayIcon): print "Hello World."
 	def simon(sysTrayIcon): print "Hello Simon."
 	def switch_icon(sysTrayIcon):
 		sysTrayIcon.icon = icons.next()
 		sysTrayIcon.refresh_icon()
-	menu_options = (
+	menu_options = [
 		('Say Hello', icons.next(), hello),
 		('Switch Icon', None, switch_icon),
 		('-', None, None),
+		('hello', icons.next(), hello),
 		('-', None, None),
 		('A sub-menu', icons.next(),
 			(
@@ -316,7 +318,7 @@ if __name__ == '__main__':
 				('Switch Icon', icons.next(), switch_icon),
 			)
 		)
-	)
+	]
 	def bye(sysTrayIcon): print 'Bye, then.'
 
 	SysTrayIcon(icons.next(), hover_text, menu_options, on_quit=bye, default_menu_index=1)

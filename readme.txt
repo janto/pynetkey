@@ -1,15 +1,14 @@
 This program is not supported by IT!
 
 contact
-=====
+=======
 - jantod@gmail.com
 
 download
-======
+========
 
-Currently hosted on assembla.com
-Windows build is downloadable here: http://www.assembla.com/spaces/pynetkey/documents
-Subversion checkout: http://svn.assembla.com/svn/pynetkey
+Windows build is downloadable here: http://dip.sun.ac.za/~janto/
+The source code is currently hosted on assembla.com. Subversion checkout: http://svn.assembla.com/svn/pynetkey
 
 windows build requirements
 ==========================
@@ -54,9 +53,8 @@ Example::
 The password will automatically be encoded (not encrypted) to prevent wandering eyes from stealing your password.
 
 todo
-====
-calculate optimal reconnection delay
+===
+port to wx (easier to manage cross platform)
 links
 	help file
-port to wx (easier to manage cross platform)
 
