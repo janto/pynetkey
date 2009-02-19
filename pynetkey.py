@@ -111,34 +111,42 @@ def get_icon(name):
 		return filename
 	return icon_color_mapping[name] # try icon in exe
 
-from ConfigParser import ConfigParser
+import ConfigParser
 import base64
 import stat
 def prompt_username_password(force_prompt=False):
 	if not force_prompt:
 		logger.debug("reading from %s" % config_filename)
-	if not force_prompt and os.path.exists(config_filename):
+
+		if not os.path.exists(config_filename):
+			# create empty config file
+			file(config_filename, "w")
 
 		# make file user-level read/write only
 		os.chmod(config_filename, stat.S_IRUSR | stat.S_IWUSR)
 
 		# process config file
-		config = ConfigParser()
+		config = ConfigParser.ConfigParser()
 		config.read(config_filename)
-		password = config.get("config", "password")
-		if password: # provided as plaintext
-			encoded_password = base64.b32encode(password)
-			config.set("config", "encoded_password_b32", encoded_password)
-			config.set("config", "password", "") # clear plaintext
-			# save encoded password
-			with file(config_filename, "w") as f:
-				config.write(f)
-
+		try:
+			username = config.get("config", "username")
+			password = config.get("config", "password")
+		except ConfigParser.NoSectionError:
+			pass # ignore config file
 		else:
-			encoded_password = config.get("config", "encoded_password_b32")
-			password = base64.b32decode(encoded_password)
+			if password: # provided as plaintext
+				encoded_password = base64.b32encode(password)
+				config.set("config", "encoded_password_b32", encoded_password)
+				config.set("config", "password", "") # clear plaintext
+				# save encoded password
+				with file(config_filename, "w") as f:
+					config.write(f)
 
-		return config.get("config", "username"), password
+			else:
+				encoded_password = config.get("config", "encoded_password_b32")
+				password = base64.b32decode(encoded_password)
+
+			return username, password
 	return password_dialog()
 
 def get_usage(username, password):
@@ -236,12 +244,12 @@ class Inetkey(object):
 		open_time = None
 		close_time = None
 		if os.path.exists(config_filename):
-			config = ConfigParser()
+			config = ConfigParser.ConfigParser()
 			config.read(config_filename)
 			try:
 				open_time = config.get("events", "open", "")
 				close_time = config.get("events", "close", "")
-			except:
+			except ConfigParser.NoSectionError:
 				pass
 		def check_schedule(_prev_check_time=[""]):
 			time_as_text = time.strftime("%H:%M")
@@ -307,16 +315,17 @@ class Inetkey(object):
 
 		menu_options = []
 		menu_options.append(("Toggle FireWall", None, toggle_connection_state))
-		menu_options.append(("Open FireWall", get_icon("green"), lambda a: self.open_firewall()))
-		menu_options.append(("Close FireWall", get_icon("orange"), lambda a: self.close_firewall()))
+		menu_options.append(("Open FireWall", get_icon("green"), lambda e: self.open_firewall()))
+		menu_options.append(("Close FireWall", get_icon("orange"), lambda e: self.close_firewall()))
 		menu_options.append(("-", None, None))
 		if platform.system() in ("Windows", "Microsoft"):
 			menu_options.append(("Close on Workstation Lock", lambda: self.close_on_workstation_locked, toggle_close_on_workstation_locked))
 		menu_options.append(("Change user...", None, change_user))
+		menu_options.append(("Edit config file...", None, lambda e: open_url(config_filename)))
 		menu_options.append(("-", None, None))
-		menu_options.append(("User admin page...", None, lambda a: open_url('http://www.sun.ac.za/useradm')))
-		menu_options.append(("Firewall usage...", None, lambda a: open_url('https://maties2.sun.ac.za/fwusage/')))
-		menu_options.append(("Tariff structure...", None, lambda a: open_url('http://infoteg.sun.ac.za/infoteg/IN_Tariewe_E.htm')))
+		menu_options.append(("User admin page...", None, lambda e: open_url('http://www.sun.ac.za/useradm')))
+		menu_options.append(("Firewall usage...", None, lambda e: open_url('https://maties2.sun.ac.za/fwusage/')))
+		menu_options.append(("Tariff structure...", None, lambda e: open_url('http://infoteg.sun.ac.za/infoteg/IN_Tariewe_E.htm')))
 		menu_options.append(("-", None, None))
 		self.systrayicon.construct(menu_options, startup=self.startup, on_quit=on_quit)
 
