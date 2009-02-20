@@ -97,6 +97,7 @@ class TrayIcon(object):
 
 	def __init__(self):
 		self.app = None
+		self.filename = "icons/normal.ico"
 
 	def construct(self, menu_options=None, startup=None, on_quit=None):
 		app = wx.App(0)
@@ -104,18 +105,21 @@ class TrayIcon(object):
 		app.frame = TaskBarApp(None, -1, ' ', menu_options=menu_options, on_quit=on_quit)
 		app.frame.Center(wx.BOTH)
 		app.frame.Show(False)
-		#~ self.set_icon("icons/green.ico")
+		#~ self.set_icon()
 		#~ print 1
 		if startup is not None:
 			startup(self)
 		#~ print 2
 		app.MainLoop()
 
-	def set_icon(self, filename, text=None):
-		self.app.frame.set_icon(filename=filename, text=text)
+	def set_icon(self, filename=None, text=None):
+		if filename is not None:
+			self.filename = filename
+		self.app.frame.set_icon(filename=self.filename, text=text)
 
 	def set_hover_text(self, text):
-		self.app.frame.set_hover_text(text=text)
+		#~ self.app.frame.set_hover_text(text=text)
+		self.set_icon(text=text)
 
 def gui_quit():
 	pass

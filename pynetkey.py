@@ -238,6 +238,7 @@ class Inetkey(object):
 			self.logger.debug("querying usage")
 			try:
 				usage = get_usage(self.username, self.password)
+				#~ self.logger.debug(usage)
 				if usage:
 					self.systrayicon.set_hover_text("R%s" % usage)
 			except Exception, e:
