@@ -38,39 +38,47 @@ class TaskBarIcon(wx.TaskBarIcon):
 			if text == "-":
 				menu.AppendSeparator()
 				continue
+
 			id = wx.NewId()
-			menu.Append(id, text)
+			new = wx.MenuItem(menu, id, text)
+			if icon_filename is not None:
+				new.SetBitmap(wx.Bitmap(icon_filename))
+			menu.AppendItem(new)
+
 			self.callbacks[id] = callback
 			self.Bind(wx.EVT_MENU, self.OnTaskBarActivate, id=id)
-		menu.Append(self.TBMENU_CLOSE,   "Exit Program")
+		menu.Append(self.TBMENU_CLOSE,   "Quit")
 
 		return menu
 
 	def OnTaskBarActivate(self, evt):
-		print "activate", dir(evt)
+		#~ print "activate", dir(evt)
 		callback = self.callbacks[evt.GetId()]
 		callback(self)
-		self.frame.Show()
-		self.frame.Raise()
+		#~ self.frame.Show()
+		#~ self.frame.Raise()
 
 	def OnTaskBarClose(self, evt):
-		self.on_quit()
+		self.on_quit(None)
 		self.frame.Close()
 		self.Destroy()
 		wx.GetApp().ProcessIdle()
 
 class TaskBarApp(wx.Frame):
 
-	def __init__(self, parent, id, title, menu_options=None, on_quit=None):
+	def __init__(self, parent, id, title, menu_options, on_quit=None):
 		wx.Frame.__init__(self, parent, -1, title, size = (1, 1),
 		    style=wx.FRAME_NO_TASKBAR|wx.NO_FULL_REPAINT_ON_RESIZE)
 		self.tbicon = TaskBarIcon(frame=self, menu_options=menu_options, on_quit=on_quit)
 		self.tbicon.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
 		#~ self.tbicon.Bind(wx.EVT_TASKBAR_RIGHT_UP, self.OnTaskBarRightClick)
-		self.Show(True)
+		self.menu_options = menu_options
+
+		#~ self.Show(True)
 
 	def OnTaskBarLeftDClick(self, evt):
-		print "dblL"
+		text, icon_filename, callback = self.menu_options[0]
+		callback(self)
 
 	#~ def OnTaskBarRightClick(self, evt):
 		#~ print "R"
@@ -96,11 +104,11 @@ class TrayIcon(object):
 		app.frame = TaskBarApp(None, -1, ' ', menu_options=menu_options, on_quit=on_quit)
 		app.frame.Center(wx.BOTH)
 		app.frame.Show(False)
-		self.set_icon()
-		print 1
+		#~ self.set_icon("icons/green.ico")
+		#~ print 1
 		if startup is not None:
 			startup(self)
-		print 2
+		#~ print 2
 		app.MainLoop()
 
 	def set_icon(self, filename, text=None):
@@ -110,7 +118,8 @@ class TrayIcon(object):
 		self.app.frame.set_hover_text(text=text)
 
 def gui_quit():
-	print "gui_quit"
+	pass
+	#~ print "gui_quit"
 
 class LoginDialog(wx.Dialog):
 	def __init__(self, parent, id=-1, title="Login", pos=wx.DefaultPosition, size=wx.Size(250, 150)):
@@ -120,8 +129,8 @@ class LoginDialog(wx.Dialog):
 		wx.StaticText(self, -1, 'User name: ', wx.Point(20, 30))
 		wx.StaticText(self, -1, 'Password: ', wx.Point(20, 55))
 
-		self.nameBox = wx.TextCtrl(self, -1, '', wx.Point(80,30), wx.Size(120, -1))
-		self.passwordBox = wx.TextCtrl(self, -1, '', wx.Point(80,55), wx.Size(120, -1), style=wx.TE_PASSWORD)
+		self.nameBox = wx.TextCtrl(self, -1, '', wx.Point(100,30), wx.Size(120, -1))
+		self.passwordBox = wx.TextCtrl(self, -1, '', wx.Point(100,55), wx.Size(120, -1), style=wx.TE_PASSWORD)
 		wx.Button(self, wx.ID_OK, ' OK ', wx.Point(35, 90), wx.DefaultSize).SetDefault()
 		wx.Button(self, wx.ID_CANCEL, ' Cancel ', wx.Point(135, 90), wx.DefaultSize)
 
@@ -141,7 +150,7 @@ def password_dialog():
 	main.Center(wx.BOTH)
 	main.Show(False)
 	username, password = login.GetUser()
-	print username, password
+	#~ print username, password
 	#~ app.MainLoop()
 	main.Close()
 	return username, password

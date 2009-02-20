@@ -31,6 +31,10 @@ refresh_frequency = 6*60
 usage_query_frequency = 1*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
 
+logging.root.setLevel(logging.WARN)
+#~ logging.root.setLevel(logging.DEBUG)
+logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M")
+
 # determine root directory
 root_dir = os.path.abspath(sys.path[0]) # can't use __file__ with py2exe
 if os.path.isfile(root_dir): # py2exe gives library.zip as path[0]
@@ -52,15 +56,16 @@ if platform.system() in ("Windows", "Microsoft"):
 		hDesktop = OpenDesktop("default", 0, False, DESKTOP_SWITCHDESKTOP)
 		result = SwitchDesktop(hDesktop)
 		return not result # no active desktop
-	config_filename = os.path.expanduser("~\\inetkey.ini")
+	#~ config_filename = os.path.expanduser("~\\inetkey.ini") # HOME is unreliable
+	config_filename = os.path.join(os.environ['HOMEDRIVE'], os.environ['HOMEPATH'], "inetkey.ini")
 
-#~ elif platform.system() == "Linux": #XXX and mac?
-	#~ from wxtrayicon import TrayIcon, password_dialog, gui_quit
-	#~ def open_url(url):
-		#~ os.system('gnome-open %s' % url)
-	#~ def workstation_is_locked():
-		#~ return False
-	#~ config_filename = os.path.expanduser("~/.inetkeyrc")
+elif platform.system() == "Linux": #XXX and mac?
+	from wxtrayicon import TrayIcon, password_dialog, gui_quit
+	def open_url(url):
+		os.system('gnome-open %s' % url)
+	def workstation_is_locked():
+		return False
+	config_filename = os.path.expanduser("~/.inetkeyrc")
 
 elif platform.system() == "Linux":
 	from gtktrayicon import password_dialog
@@ -430,6 +435,4 @@ def main():
 		sys.exit() # makes sure everything is dead. get_usage() might take loooong to timeout.
 
 if __name__ == '__main__':
-	logging.root.setLevel(logging.WARN)
-	logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M")
 	main()

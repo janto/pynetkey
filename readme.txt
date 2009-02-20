@@ -33,11 +33,12 @@ settings
 ========
 
 To avoid prompting for username/password every time you can place it in a config file.
+WARNING: Please be aware how dangerous this is. If you don't know why this is dangerous, I suggest you rather not do it. Someone can easily steal your password.
 
 On Windows: ~\inetkey.ini (i.e. "C:\Documents and Settings\username\inetkey.ini")
 On Linux: ~/.inetkeyrc
 
-You can also force open and close events at scheduled times. Current implementation is accurate to within 30seconds. Will fix when I have time.
+You can also force open and close events at scheduled times. Useful for things like late night downloads / torrents. Current implementation is accurate to within 30seconds. Will fix when I have time.
 
 Example::
 
