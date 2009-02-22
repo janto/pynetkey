@@ -42,10 +42,9 @@ if os.path.isfile(root_dir): # py2exe gives library.zip as path[0]
 assert os.path.exists(os.path.join(root_dir, "icons")), root_dir
 
 if platform.system() in ("Windows", "Microsoft"):
+	from systrayicon import password_dialog, TrayIcon, gui_quit
+	#~ from wxtrayicon import TrayIcon, password_dialog, gui_quit
 	import win32api
-	from systrayicon import password_dialog, TrayIcon
-	def gui_quit():
-		pass
 	def open_url(url):
 		win32api.ShellExecute(0,None,url,None,None,1)
 	def workstation_is_locked():

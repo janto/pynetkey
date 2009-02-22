@@ -294,6 +294,8 @@ class TrayIcon:
 	def construct(self, menu_options, startup, on_quit):
 		SysTrayIcon("icons/orange.ico", "inetkey", menu_options, call_on_startup=startup, on_quit=on_quit, default_menu_index=0)
 
+def gui_quit():
+	pass
 
 # Minimal self test. You'll need a bunch of ICO files in the icons directory in order for this to work...
 if __name__ == '__main__':

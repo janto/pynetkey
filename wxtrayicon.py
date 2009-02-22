@@ -34,15 +34,20 @@ class TaskBarIcon(wx.TaskBarIcon):
 		menu = wx.Menu()
 		self.callbacks = {}
 		for menu_option in self.menu_options:
-			text, icon_filename, callback = menu_option
+			text, icon, callback = menu_option
 			if text == "-":
 				menu.AppendSeparator()
 				continue
 
 			id = wx.NewId()
 			new = wx.MenuItem(menu, id, text)
-			if icon_filename is not None:
-				new.SetBitmap(wx.Bitmap(icon_filename))
+			if icon is not None:
+				try:
+					if not callable(icon):
+						new.SetBitmap(wx.Bitmap(icon))
+				except:
+					print icon
+					raise
 			menu.AppendItem(new)
 
 			self.callbacks[id] = callback
@@ -77,7 +82,7 @@ class TaskBarApp(wx.Frame):
 		#~ self.Show(True)
 
 	def OnTaskBarLeftDClick(self, evt):
-		text, icon_filename, callback = self.menu_options[0]
+		text, icon, callback = self.menu_options[0]
 		callback(self)
 
 	#~ def OnTaskBarRightClick(self, evt):
@@ -164,6 +169,6 @@ def main():
 	tray.construct()
 
 if __name__ == '__main__':
-	#~ main()
-	import pynetkey
-	pynetkey.main()
+	main()
+	#~ import pynetkey
+	#~ pynetkey.main()
