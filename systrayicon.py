@@ -199,23 +199,19 @@ class SysTrayIcon(object):
 					checked = option_icon()
 					option_icon = None # no icon
 				if checked:
-					item, extras = win32gui_struct.PackMENUITEMINFO(text=option_text,
-																fState=win32con.MFS_CHECKED,
-																wID=option_id)
+					item, extras = win32gui_struct.PackMENUITEMINFO(text=option_text, fState=win32con.MFS_CHECKED, wID=option_id)
 				else:
-					item, extras = win32gui_struct.PackMENUITEMINFO(text=option_text,
-																hbmpItem=option_icon,
-																wID=option_id)
+					item, extras = win32gui_struct.PackMENUITEMINFO(text=option_text, hbmpItem=option_icon, wID=option_id)
 				win32gui.InsertMenuItem(menu, 0, 1, item)
 			else: # submenu
 				submenu = win32gui.CreatePopupMenu()
 				self.create_menu(submenu, option_action)
-				item, extras = win32gui_struct.PackMENUITEMINFO(text=option_text,
-																hbmpItem=option_icon,
-																hSubMenu=submenu)
+				item, extras = win32gui_struct.PackMENUITEMINFO(text=option_text, hbmpItem=option_icon, hSubMenu=submenu)
 				win32gui.InsertMenuItem(menu, 0, 1, item)
 
 	def prep_menu_icon(self, icon):
+		assert os.path.exists(icon)
+
 		# First load the icon.
 		ico_x = win32api.GetSystemMetrics(win32con.SM_CXSMICON)
 		ico_y = win32api.GetSystemMetrics(win32con.SM_CYSMICON)
@@ -299,20 +295,23 @@ def gui_quit():
 
 # Minimal self test. You'll need a bunch of ICO files in the icons directory in order for this to work...
 if __name__ == '__main__':
-	import itertools, glob
+	import itertools, glob, random
 	#~ print prompt_username_password()
-	icons = itertools.imap(os.path.abspath, itertools.cycle(glob.glob('icons\\*.ico')))
+	icons = itertools.imap(os.path.abspath, itertools.cycle(sorted(glob.glob('icons\\*.ico'))))
 	hover_text = "SysTrayIcon.py Demo"
 	def hello(sysTrayIcon): print "Hello World."
 	def simon(sysTrayIcon): print "Hello Simon."
 	def switch_icon(sysTrayIcon):
 		sysTrayIcon.icon = icons.next()
 		sysTrayIcon.refresh_icon()
+	def check():
+		return random.choice([True, False])
 	menu_options = [
 		('Say Hello', icons.next(), hello),
 		('Switch Icon', None, switch_icon),
 		('-', None, None),
 		('hello', icons.next(), hello),
+		('checked?', check, hello),
 		('-', None, None),
 		('A sub-menu', icons.next(),
 			(
