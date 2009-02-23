@@ -58,13 +58,13 @@ if platform.system() in ("Windows", "Microsoft"):
 	#~ config_filename = os.path.expanduser("~\\inetkey.ini") # HOME is unreliable
 	config_filename = os.path.join(os.environ['HOMEDRIVE'], os.environ['HOMEPATH'], "inetkey.ini")
 
-elif platform.system() == "Linux": #XXX and mac?
-	from wxtrayicon import TrayIcon, password_dialog, gui_quit
-	def open_url(url):
-		os.system('gnome-open %s' % url)
-	def workstation_is_locked():
-		return False
-	config_filename = os.path.expanduser("~/.inetkeyrc")
+#~ elif platform.system() == "Linux": #XXX and mac?
+	#~ from wxtrayicon import TrayIcon, password_dialog, gui_quit
+	#~ def open_url(url):
+		#~ os.system('gnome-open %s' % url)
+	#~ def workstation_is_locked():
+		#~ return False
+	#~ config_filename = os.path.expanduser("~/.inetkeyrc")
 
 elif platform.system() == "Linux":
 	from gtktrayicon import password_dialog
@@ -237,7 +237,7 @@ class Inetkey(object):
 			self.logger.debug("querying usage")
 			try:
 				usage = get_usage(self.username, self.password)
-				#~ self.logger.debug(usage)
+				self.logger.debug("usage query result: %s" % usage)
 				if usage:
 					self.systrayicon.set_hover_text("R%s" % usage)
 			except Exception, e:
