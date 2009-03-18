@@ -32,7 +32,7 @@ usage_query_frequency = 1*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
 
 logging.root.setLevel(logging.WARN)
-logging.root.setLevel(logging.DEBUG)
+#~ logging.root.setLevel(logging.DEBUG)
 logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M")
 
 # determine root directory
