@@ -8,9 +8,12 @@
 
 from __future__ import division, with_statement
 
-import urllib2, urllib
 import logging
 logger = logging.getLogger("")
+
+import socket
+socket.setdefaulttimeout(15) # global timeout
+import urllib2, urllib
 
 import re
 import signal
@@ -55,7 +58,7 @@ if platform.system() in ("Windows", "Microsoft"):
 		hDesktop = OpenDesktop("default", 0, False, DESKTOP_SWITCHDESKTOP)
 		result = SwitchDesktop(hDesktop)
 		return not result # no active desktop
-	#~ config_filename = os.path.expanduser("~\\inetkey.ini") # HOME is unreliable
+	# HOME is unreliable
 	config_filename = os.path.join(os.environ['HOMEDRIVE'], os.environ['HOMEPATH'], "inetkey.ini")
 
 #~ elif platform.system() == "Linux": #XXX and mac?
@@ -165,7 +168,7 @@ def get_usage(username, password):
 	try:
 		result = opener.open(url)
 	except RuntimeError: #maximum recursion depth exceeded
-		# why this sometimes happens is beyond me
+		#XXX why this sometimes happens is beyond me
 		return None
 	data = result.read()
 

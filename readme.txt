@@ -14,7 +14,7 @@ windows build requirements
 ==========================
 - python2.5
 - py2exe
-- pywin32
+- pywin32 (210 works. popup menu icons disappeared for 211,212,213)
 
 Run build.bat to create distribution.
 
