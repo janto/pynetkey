@@ -47,7 +47,7 @@ Example::
 	password=supersecret
 
 	[events]
-	open = 02:05
+	open = 01:55
 	close = 07:55
 
 

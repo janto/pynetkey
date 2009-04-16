@@ -10,6 +10,7 @@ from __future__ import division, with_statement
 
 import logging
 logger = logging.getLogger("")
+import traceback
 
 import socket
 socket.setdefaulttimeout(15) # global timeout
@@ -58,8 +59,8 @@ if platform.system() in ("Windows", "Microsoft"):
 		hDesktop = OpenDesktop("default", 0, False, DESKTOP_SWITCHDESKTOP)
 		result = SwitchDesktop(hDesktop)
 		return not result # no active desktop
-	# HOME is unreliable
-	config_filename = os.path.join(os.environ['HOMEDRIVE'], os.environ['HOMEPATH'], "inetkey.ini")
+	config_filename = os.path.join(os.environ['HOMEDRIVE'], os.environ['HOMEPATH'], "inetkey.ini") # HOME is unreliable
+	TEMP_DIRECTORY = os.environ['TEMP'] or os.environ['TMP']
 
 #~ elif platform.system() == "Linux": #XXX and mac?
 	#~ from wxtrayicon import TrayIcon, password_dialog, gui_quit
@@ -78,9 +79,13 @@ elif platform.system() == "Linux":
 	def workstation_is_locked():
 		return False
 	config_filename = os.path.expanduser("~/.inetkeyrc")
+	TEMP_DIRECTORY = "/tmp"
 
 else:
 	raise Exception(platform.system()+" not supported")
+
+assert os.path.exists(TEMP_DIRECTORY), TEMP_DIRECTORY
+log_filename = os.path.join(TEMP_DIRECTORY, "pynetkey_error.txt")
 
 class ReTimer(Thread):
 
@@ -438,4 +443,10 @@ def main():
 		sys.exit() # makes sure everything is dead. get_usage() might take loooong to timeout.
 
 if __name__ == '__main__':
-	main()
+	try:
+		main()
+	except SystemExit:
+		pass
+	except: # log any unexpected exceptions
+		traceback.print_exc(file=file(log_filename, "w"))
+		raise
