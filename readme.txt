@@ -58,4 +58,3 @@ todo
 port to wx (easier to manage cross platform)
 links
 	help file
-
