@@ -34,6 +34,9 @@ import __init__
 refresh_frequency = 6*60
 usage_query_frequency = 1*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
+#~ connection_url = "https://fw0.sun.ac.za:950"
+connection_url = "https://fw.sun.ac.za:950"
+#~ connection_url = "https://146.232.128.17:950"
 
 logging.root.setLevel(logging.WARN)
 #~ logging.root.setLevel(logging.DEBUG)
@@ -222,9 +225,7 @@ class Inetkey(object):
 	def __init__(self, username, password, open_on_launch=True):
 		self.logger = logging.getLogger("Inetkey")
 		self.statistics = Statistics()
-		#~ self.url = "https://fw0.sun.ac.za:950"
-		self.url = "https://fw.sun.ac.za:950"
-		#~ self.url = "https://146.232.128.17:950"
+		self.url = connection_url
 		self.username = username
 		self.password = password
 		self.open_on_launch = open_on_launch

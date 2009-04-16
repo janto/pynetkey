@@ -1,20 +1,26 @@
 #!/usr/bin/env python
 
 """
+
+This script is a minimal console version of pynetkey -- which is inetkey written in Python.
+
 http://sulug.sun.ac.za/sulugwiki/pynetkey
 
 WARNING: This script does not do any authentication of the server's certificate. It might even be sending the login details unencrypted. Maybe. Haven't checked it out in detail.
-Also, pynetkey is not supported by IT. So feel free to contact me if there is any problem.
+Also, pynetkey is not supported by IT, but feel free to contact me if there is any problem.
 - Janto (jantod@gmail.com)
 
 History
 ------
+Now also sends client version details on connect to future proof things - Janto (Apr 2009)
 Changed address from fw0.sun.ac.za to fw.sun.ac.za for SCN users - Janto (Oct 2008)
 Only prompt for a password if we have a username - NM (Feb 2007)
 Initial version - Janto (Nov 2005)
 
 """
 
+#~ import socket
+#~ socket.setdefaulttimeout(15) # global timeout
 import urllib2, urllib
 import logging
 import re
@@ -25,21 +31,24 @@ from time import sleep
 from getpass import getpass
 
 reconnection_delay = 60*10
+version = "pynetkey cli 20090416"
+connection_url = "https://fw.sun.ac.za:950"
 
 class ConnectionException(Exception):
 	pass
 
 class Inetkey(object):
-	
+
 	def __init__(self, username, password):
 		self.logger = logging.getLogger("Inetkey")
-		self.url = "https://fw.sun.ac.za:950"
+		self.url = connection_url
 		self.username = username
 		self.password = password
 		self.firewall_open = False
-	
+
 	def make_request(self, variables=[]):
 		if variables:
+			variables.insert(0, ("client", version)) # maybe IT will one day want to block a specific version?
 			request = urllib2.Request(url=self.url, data=urllib.urlencode(variables))
 		else:
 			request = urllib2.Request(url=self.url)
@@ -47,7 +56,7 @@ class Inetkey(object):
 		response = urllib2.HTTPSHandler().https_open(request).read()
 		assert "ERROR" not in response, response
 		return response
-	
+
 	def authenticate(self):
 		# get sesion ID
 		self.logger.debug("connecting")
@@ -66,7 +75,7 @@ class Inetkey(object):
 		else:
 			self.info(re.findall('FireWall-1 message: (.*)', response)[0].strip())
 		return session_id
-	
+
 	def open_firewall(self):
 		self.info("opening firewall...")
 		try:
@@ -77,7 +86,7 @@ class Inetkey(object):
 			self.connected(connected=True)
 		except ConnectionException, e:
 			self.error(str(e))
-	
+
 	def close_firewall(self):
 		if not self.firewall_open:
 			return
@@ -90,23 +99,20 @@ class Inetkey(object):
 			self.connected(connected=False)
 		except ConnectionException, e:
 			self.error(str(e))
-	
-	# ---------------
-	# display
-	
+
 	def connected(self, connected=True):
 		self.firewall_open = connected
 		if connected:
 			self.logger.info("firewall open")
 		else:
 			self.logger.info("firewall closed")
-	
+
 	def error(self, text):
 		self.logger.error(text)
-	
+
 	def warn(self, text):
 		self.logger.warn(text)
-	
+
 	def info(self, text):
 		self.logger.info(text)
 
