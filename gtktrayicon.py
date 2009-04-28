@@ -15,15 +15,19 @@ class GtkTrayIcon:
 			self.menu.popup(None,None,None,event.button,event.time)
 
 	def set_icon(self, icon, hover_text=None):
+		gtk.gdk.threads_enter()
 		if hover_text is not None:
 			#~ self.tooltips = gtk.Tooltips()
 			self.tooltips.set_tip(self.icon, hover_text)
 		self.image.set_from_file(icon)
+		gtk.gdk.threads_leave()
 
 	def set_hover_text(self, text):
+		gtk.gdk.threads_enter()
 		#~ print "text", text
 		#~ self.tooltips = gtk.Tooltips()
 		self.tooltips.set_tip(self.icon, text)
+		gtk.gdk.threads_leave()
 
 	def construct(self, menu_options, on_quit=gtk.main_quit, startup=None):
 		# creates the tray icon
@@ -63,9 +67,8 @@ class GtkTrayIcon:
 		if startup:
 			startup(self)
 
-		gtk.gdk.threads_init() #XXX no idea what this does but it makes things work
-
 		# run the main loop
+		gtk.gdk.threads_init()
 		gtk.main()
 
 def password_dialog():

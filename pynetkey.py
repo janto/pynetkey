@@ -21,7 +21,7 @@ logger = logging.getLogger("")
 import traceback
 
 import socket
-socket.setdefaulttimeout(15) # global timeout
+socket.setdefaulttimeout(connection_timeout) # global timeout
 import urllib2, urllib
 
 import re
@@ -73,6 +73,7 @@ if platform.system() in ("Windows", "Microsoft"):
 	#~ def workstation_is_locked():
 		#~ return False
 	#~ config_filename = os.path.expanduser("~/.inetkeyrc")
+	#~ TEMP_DIRECTORY = "/tmp"
 
 elif platform.system() == "Linux":
 	from gtktrayicon import password_dialog
@@ -120,6 +121,7 @@ class ReTimer(Thread):
 class ConnectionException(Exception):
 	pass
 
+# icon positions in compiled exe
 icon_color_mapping = dict(blue=101, green=102, orange=103, red=104, yellow=105)
 
 def get_icon(name):
@@ -251,6 +253,7 @@ class Inetkey(object):
 				if usage:
 					self.systrayicon.set_hover_text("R%s" % usage)
 			except Exception, e:
+				#~ raise
 				self.systrayicon.set_hover_text("error checking usage: "+str(e))
 				#~ self.systrayicon.set_hover_text("cannot determine firewall usage")
 		self.usage_checker = ReTimer(usage_query_frequency, check_usage, immediate=True)
