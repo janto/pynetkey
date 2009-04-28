@@ -39,8 +39,8 @@ import time
 
 import __init__
 
-logging.root.setLevel(logging.WARN)
-#~ logging.root.setLevel(logging.DEBUG)
+#~ logging.root.setLevel(logging.WARN)
+logging.root.setLevel(logging.DEBUG)
 logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M")
 
 # determine root directory

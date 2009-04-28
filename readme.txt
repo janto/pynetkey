@@ -9,6 +9,7 @@ download
 
 Windows build is downloadable here: http://dip.sun.ac.za/~janto/
 The source code is currently hosted on assembla.com. Subversion checkout: http://svn.assembla.com/svn/pynetkey
+I'll move it to this side of the firewall soon.
 
 windows build requirements
 ==========================

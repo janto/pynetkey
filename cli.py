@@ -22,7 +22,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20090416"
+version = "pynetkey cli 20090428"
 connection_url = "https://fw.sun.ac.za:950"
 
 #~ import socket
@@ -124,8 +124,11 @@ def main():
 	parser.add_option("-u", "--user", dest="username", help="", metavar="USERNAME")
 	options, args = parser.parse_args()
 	username = options.username
-	password = getpass()
-	if not (password and username):
+	password = None
+
+	if username:
+		password = getpass()
+	if not username or not password:
 		parser.print_help()
 		return
 	# create application
