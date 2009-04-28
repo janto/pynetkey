@@ -18,6 +18,10 @@ connection_timeout = 15
 
 import logging
 logger = logging.getLogger("")
+logging.root.setLevel(logging.WARN)
+#~ logging.root.setLevel(logging.DEBUG)
+logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M")
+
 import traceback
 
 import socket
@@ -38,10 +42,7 @@ import os.path
 import time
 
 import __init__
-
-logging.root.setLevel(logging.WARN)
-#~ logging.root.setLevel(logging.DEBUG)
-logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M")
+version = "pynetkey %s" % __init__.version
 
 # determine root directory
 root_dir = os.path.abspath(sys.path[0]) # can't use __file__ with py2exe
@@ -177,7 +178,7 @@ def get_usage(username, password):
 
 	opener = FancyURLopener(proxies={}) # no proxy
 	try:
-		result = opener.open(url)
+		result = opener.open(url, data=urllib.urlencode([("client", version)])) # maybe IT will one day want to block a specific version?
 	except RuntimeError: #maximum recursion depth exceeded
 		#XXX why this sometimes happens is beyond me
 		return None
@@ -355,7 +356,7 @@ class Inetkey(object):
 	def make_request(self, variables=[]):
 		try:
 			if variables:
-				variables.insert(0, ("client", "pynetkey %s" % __init__.version)) # maybe IT will one day want to block a specific version?
+				variables.insert(0, ("client", version)) # maybe IT will one day want to block a specific version?
 				request = urllib2.Request(url=self.url, data=urllib.urlencode(variables))
 			else:
 				request = urllib2.Request(url=self.url)
