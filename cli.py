@@ -122,11 +122,9 @@ def main():
 	# parse arguments
 	parser = OptionParser()
 	parser.add_option("-u", "--user", dest="username", help="", metavar="USERNAME")
-	#~ options, args = parser.parse_args()
-	#~ username = options.username
-	username = "13662244"
-	password = "f000000!"
-	#~ password = getpass()
+	options, args = parser.parse_args()
+	username = options.username
+	password = getpass()
 	if not (password and username):
 		parser.print_help()
 		return
