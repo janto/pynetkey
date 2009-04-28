@@ -7,6 +7,10 @@ try:
 except ImportError:
 	raise Exception('your probably need to run "sudo apt-get install python-gtk2 python-gnome2-extras"')
 
+import gobject
+
+gtk.gdk.threads_init()
+
 class GtkTrayIcon:
 	def button_press_callback(self, widget, event):
 		if event.type == gtk.gdk._2BUTTON_PRESS:
@@ -15,21 +19,21 @@ class GtkTrayIcon:
 			self.menu.popup(None,None,None,event.button,event.time)
 
 	def set_icon(self, icon, hover_text=None):
-		gtk.gdk.threads_enter()
-		if hover_text is not None:
-			#~ self.tooltips = gtk.Tooltips()
-			self.tooltips.set_tip(self.icon, hover_text)
-		self.image.set_from_file(icon)
-		gtk.gdk.threads_leave()
+		def _set_icon(icon=icon, hover_text=hover_text):
+			if hover_text is not None:
+				#~ self.tooltips = gtk.Tooltips()
+				self.tooltips.set_tip(self.icon, hover_text)
+			self.image.set_from_file(icon)
+		gobject.idle_add(_set_icon)
 
 	def set_hover_text(self, text):
-		gtk.gdk.threads_enter()
 		#~ print "text", text
 		#~ self.tooltips = gtk.Tooltips()
-		self.tooltips.set_tip(self.icon, text)
-		gtk.gdk.threads_leave()
+		#~ self.tooltips.set_tip(self.icon, text)
+		gobject.idle_add(self.tooltips.set_tip, self.icon, text)
 
 	def construct(self, menu_options, on_quit=gtk.main_quit, startup=None):
+
 		# creates the tray icon
 		self.icon = egg.trayicon.TrayIcon("inetkey")
 
@@ -64,11 +68,11 @@ class GtkTrayIcon:
 				item.connect("activate", action)
 			item.show()
 			self.menu.append(item)
+
 		if startup:
 			startup(self)
 
 		# run the main loop
-		gtk.gdk.threads_init()
 		gtk.main()
 
 def password_dialog():
