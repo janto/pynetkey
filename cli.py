@@ -19,8 +19,14 @@ Initial version - Janto (Nov 2005)
 
 """
 
+
+reconnection_delay = 60*10
+connection_timeout = 15
+version = "pynetkey cli 20090416"
+connection_url = "https://fw.sun.ac.za:950"
+
 #~ import socket
-#~ socket.setdefaulttimeout(15) # global timeout
+#~ socket.setdefaulttimeout(connection_timeout) # global timeout
 import urllib2, urllib
 import logging
 import re
@@ -29,10 +35,6 @@ import signal
 from optparse import OptionParser
 from time import sleep
 from getpass import getpass
-
-reconnection_delay = 60*10
-version = "pynetkey cli 20090416"
-connection_url = "https://fw.sun.ac.za:950"
 
 class ConnectionException(Exception):
 	pass
@@ -52,7 +54,7 @@ class Inetkey(object):
 			request = urllib2.Request(url=self.url, data=urllib.urlencode(variables))
 		else:
 			request = urllib2.Request(url=self.url)
-		#~ self.logger.debug(request.get_data())
+		request.timeout = connection_timeout #XXX hack to make it work with python2.6
 		response = urllib2.HTTPSHandler().https_open(request).read()
 		assert "ERROR" not in response, response
 		return response
@@ -120,13 +122,11 @@ def main():
 	# parse arguments
 	parser = OptionParser()
 	parser.add_option("-u", "--user", dest="username", help="", metavar="USERNAME")
-	#~ parser.add_option("-p", "--password", dest="password", help="", metavar="PASSWORD")
-	options, args = parser.parse_args()
-	username = options.username
-	if username is not None:
-		password = getpass()
-	else:
-		password = None
+	#~ options, args = parser.parse_args()
+	#~ username = options.username
+	username = "13662244"
+	password = "f000000!"
+	#~ password = getpass()
 	if not (password and username):
 		parser.print_help()
 		return
