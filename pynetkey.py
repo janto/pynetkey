@@ -11,10 +11,9 @@ from __future__ import division, with_statement
 refresh_frequency = 6*60
 usage_query_frequency = 1*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
-#~ connection_url = "https://fw0.sun.ac.za:950"
 connection_url = "https://fw.sun.ac.za:950"
-#~ connection_url = "https://146.232.128.17:950"
 connection_timeout = 15
+connection_retries = 3
 
 import logging
 logger = logging.getLogger("")
@@ -366,9 +365,8 @@ class Inetkey(object):
 			#~ self.logger.debug(request.get_data())
 			response = urllib2.HTTPSHandler().https_open(request).read()
 		except Exception, e:
-			#~ self.logger.warn(str(e).strip() or "no error message")
-			#~ raise ConnectionException(str(e))
-			raise
+			#~ raise
+			raise ConnectionException(str(e))
 		if not response:
 			raise ConnectionException("no response from server")
 		assert "ERROR" not in response, response
