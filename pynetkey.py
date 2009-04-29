@@ -90,6 +90,8 @@ elif platform.system() == "Linux":
 else:
 	raise Exception(platform.system()+" not supported")
 
+logger.debug("using config_filename %s" % config_filename)
+
 assert os.path.exists(TEMP_DIRECTORY), TEMP_DIRECTORY
 log_filename = os.path.join(TEMP_DIRECTORY, "pynetkey_error.txt")
 
@@ -367,6 +369,8 @@ class Inetkey(object):
 			#~ self.logger.warn(str(e).strip() or "no error message")
 			#~ raise ConnectionException(str(e))
 			raise
+		if not response:
+			raise ConnectionException("no response from server")
 		assert "ERROR" not in response, response
 		return response
 
