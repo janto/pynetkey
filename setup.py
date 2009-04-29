@@ -17,7 +17,7 @@ setup(
 	
 	data_files = [
 		("icons", icon_filenames),
-		("", ["readme.txt"]),
+		("", ["readme.html"]),
 	],
 
 	# targets to build
