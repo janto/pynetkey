@@ -17,8 +17,8 @@ connection_retries = 3
 
 import logging
 logger = logging.getLogger("")
-logging.root.setLevel(logging.WARN)
-#~ logging.root.setLevel(logging.DEBUG)
+#~ logging.root.setLevel(logging.WARN)
+logging.root.setLevel(logging.DEBUG)
 logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M")
 
 import traceback
@@ -257,7 +257,6 @@ class Inetkey(object):
 			except Exception, e:
 				#~ raise
 				self.systrayicon.set_hover_text("error checking usage: "+str(e))
-				#~ self.systrayicon.set_hover_text("cannot determine firewall usage")
 		self.usage_checker = ReTimer(usage_query_frequency, check_usage, immediate=True)
 
 		# scheduler
@@ -355,22 +354,30 @@ class Inetkey(object):
 # networking
 
 	def make_request(self, variables=[]):
-		try:
-			if variables:
-				variables.insert(0, ("client", version)) # maybe IT will one day want to block a specific version?
-				request = urllib2.Request(url=self.url, data=urllib.urlencode(variables))
-			else:
-				request = urllib2.Request(url=self.url)
-			request.timeout = connection_timeout #XXX hack to make it work with python2.6
-			#~ self.logger.debug(request.get_data())
-			response = urllib2.HTTPSHandler().https_open(request).read()
-		except Exception, e:
-			#~ raise
-			raise ConnectionException(str(e))
-		if not response:
-			raise ConnectionException("no response from server")
-		assert "ERROR" not in response, response
-		return response
+		e = "error connecting"
+		for retry in range(connection_retries):
+			try:
+				if variables:
+					variables.insert(0, ("client", version)) # maybe IT will one day want to block a specific version?
+					request = urllib2.Request(url=self.url, data=urllib.urlencode(variables))
+				else:
+					request = urllib2.Request(url=self.url)
+				request.timeout = connection_timeout #XXX hack to make it work with python2.6
+				#~ self.logger.debug(request.get_data())
+				response = urllib2.HTTPSHandler().https_open(request).read()
+			except urllib2.URLError, e:
+				self.logger.debug("attempt %d failed: %s" % (retry, str(e)))
+				continue # try again
+			except Exception, e:
+				#~ raise
+				raise ConnectionException(str(e))
+			if not response:
+				raise ConnectionException("no response from server")
+			assert "ERROR" not in response, response
+
+			# break from retry loop
+			return response
+		raise ConnectionException(str(e))
 
 	def authenticate(self):
 		# get sesion ID

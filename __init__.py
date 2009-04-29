@@ -7,4 +7,4 @@ it is also sent with each http request in case IT will want to block a specific 
 this is especially important for the get_usage requests. because it's done every minute, the traffic might become significant if pynetkey's usage spreads.
 yeah, I'm paranoid.
 """
-version = "0.5"
+version = "0.6"
