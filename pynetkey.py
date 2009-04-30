@@ -15,24 +15,21 @@ connection_url = "https://fw.sun.ac.za:950"
 connection_timeout = 15
 connection_retries = 3
 
-import traceback
-
 import socket
 socket.setdefaulttimeout(connection_timeout) # global timeout
 import urllib2, urllib
 
 import re
-import signal
 from threading import Thread, Timer, Event
-from time import localtime, strftime, sleep
+
 from datetime import timedelta, datetime
+from time import localtime, strftime, sleep
+
 import os
-import platform
-
-import sys
 import os.path
-
-import time
+import platform
+import sys
+import traceback
 
 import __init__
 version = "pynetkey %s" % __init__.version
@@ -49,6 +46,8 @@ root_dir = os.path.abspath(sys.path[0]) # can't use __file__ with py2exe
 if os.path.isfile(root_dir): # py2exe gives library.zip as path[0]
 	root_dir = os.path.dirname(root_dir)
 assert os.path.exists(os.path.join(root_dir, "icons")), root_dir
+
+# load platform specific gui code
 
 if platform.system() in ("Windows", "Microsoft"):
 	from systrayicon import password_dialog, TrayIcon, gui_quit
@@ -90,8 +89,8 @@ elif platform.system() == "Linux":
 else:
 	raise Exception(platform.system()+" not supported")
 
+# set up paths
 logger.debug("using config_filename %s" % config_filename)
-
 assert os.path.exists(TEMP_DIRECTORY), TEMP_DIRECTORY
 log_filename = os.path.join(TEMP_DIRECTORY, "pynetkey_error.txt")
 
@@ -273,7 +272,7 @@ class Inetkey(object):
 			except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
 				pass
 		def check_schedule(_prev_check_time=[""]):
-			time_as_text = time.strftime("%H:%M")
+			time_as_text = strftime("%H:%M")
 			if _prev_check_time[0] == time_as_text:
 				return # already checked in this minute
 			self.logger.debug("checking for scheduled open or close")
