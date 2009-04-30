@@ -15,12 +15,6 @@ connection_url = "https://fw.sun.ac.za:950"
 connection_timeout = 15
 connection_retries = 3
 
-import logging
-logger = logging.getLogger("")
-logging.root.setLevel(logging.WARN)
-#~ logging.root.setLevel(logging.DEBUG)
-logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M")
-
 import traceback
 
 import socket
@@ -42,6 +36,13 @@ import time
 
 import __init__
 version = "pynetkey %s" % __init__.version
+
+import logging
+logger = logging.getLogger("")
+logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M")
+logging.root.setLevel(logging.WARN)
+if os.path.exists("debug_flag_file"):
+	logging.root.setLevel(logging.DEBUG)
 
 # determine root directory
 root_dir = os.path.abspath(sys.path[0]) # can't use __file__ with py2exe
@@ -373,7 +374,8 @@ class Inetkey(object):
 				raise ConnectionException(str(e))
 			if not response:
 				raise ConnectionException("no response from server")
-			assert "ERROR" not in response, response
+			if "denied" in response or "ERROR" in response:
+				raise ConnectionException(re.findall('FireWall-1 message: (.*)', response)[0].strip())
 
 			# break from retry loop
 			return response
@@ -392,10 +394,7 @@ class Inetkey(object):
 		self.logger.debug("sending password")
 		assert "password" in response.lower(), response
 		response = self.make_request([('ID', session_id), ('STATE', "2"), ('DATA', self.password)])
-		if "denied" in response:
-			raise ConnectionException(re.findall('FireWall-1 message: (.*)', response)[0].strip())
-		else:
-			self.info(re.findall('FireWall-1 message: (.*)', response)[0].strip())
+		self.info(re.findall('FireWall-1 message: (.*)', response)[0].strip())
 		return session_id
 
 	def open_firewall(self):
