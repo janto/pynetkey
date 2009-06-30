@@ -49,7 +49,7 @@ To install the GUI version:
 <li>Download the source. There are two ways:
 	<ul>
 	<li>download <a href="pynetkey.tar.gz">pynetkey.tar.gz</a></li>
-	<li>get the bleeding edge sources from from the repository
+	<li>get the bleeding edge sources from the repository
 		<pre>svn co checkout: http://svn.assembla.com/svn/pynetkey</pre>
 		for this to work you will need to set up the firewall in your  <code>~/.subversion/servers</code> file
 		<pre>
@@ -58,6 +58,7 @@ http-proxy-exceptions = *.sun.ac.za
 http-proxy-host = proxy.sun.ac.za
 http-proxy-port = 3128
 		</pre>
+		This is a bit of a catch-22 situation, since you already need something like inetkey to get to assembla.com. Sorry about that.
 	</li>
 	</ul>
 </li>
@@ -71,7 +72,7 @@ http-proxy-port = 3128
 To avoid prompting for the username and password every time you start pynetkey, you can place it in a config file.
 </p>
 <p>
-<em><font color="red">WARNING</font></em>: Please be aware how dangerous this is. If you don't know why this is dangerous, I suggest you rather not do it. Someone can easily steal your password.
+<em><font color="red">WARNING</font></em>: Please be aware how dangerous this is. If you don't know why this is dangerous, I suggest you rather not do it. Someone can easily steal your password. This is also why I won't make this feature easily available from the GUI. IT won't like the idea of people storing their passwords on disk.
 </p>
 
 Location (or just select "Edit config file..." from the popup menu):

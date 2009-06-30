@@ -248,6 +248,8 @@ class Inetkey(object):
 		self.refresher = ReTimer(refresh_frequency, refresh)
 
 		def check_usage():
+			if not self.firewall_open:
+				return
 			self.logger.debug("querying usage")
 			try:
 				usage = get_usage(self.username, self.password)
