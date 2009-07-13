@@ -9,9 +9,11 @@ http://sulug.sun.ac.za/sulugwiki/pynetkey
 WARNING: This script does not do any authentication of the server's certificate. It might even be sending the login details unencrypted. Maybe. Haven't checked it out in detail.
 Also, pynetkey is not supported by IT, but feel free to contact me if there is any problem.
 - Janto (jantod@gmail.com)
+http://bitbucket.org/janto/pynetkey
 
 History
 ------
+Optional load from config file - Janto (Jul 2009)
 Now also sends client version details on connect to future proof things - Janto (Apr 2009)
 Changed address from fw0.sun.ac.za to fw.sun.ac.za for SCN users - Janto (Oct 2008)
 Only prompt for a password if we have a username - NM (Feb 2007)
@@ -19,10 +21,9 @@ Initial version - Janto (Nov 2005)
 
 """
 
-
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20090428"
+version = "pynetkey cli 20090714"
 connection_url = "https://fw.sun.ac.za:950"
 
 #~ import socket
@@ -35,6 +36,45 @@ import signal
 from optparse import OptionParser
 from time import sleep
 from getpass import getpass
+
+import ConfigParser
+import base64
+import os
+
+def load_username_password(config_filename):
+	username = None
+	password = None
+
+	if not os.path.exists(config_filename):
+		print "cant find %s" % config_filename
+		return username, password
+
+	# make file user-level read/write only
+	os.chmod(config_filename, stat.S_IRUSR | stat.S_IWUSR)
+
+	# process config file
+	config = ConfigParser.ConfigParser()
+	config.read(config_filename)
+	try:
+		username = config.get("config", "username")
+		password = config.get("config", "password")
+	except ConfigParser.NoSectionError:
+		print "error loading username/password"
+	else:
+		if password: # provided as plaintext
+			encoded_password = base64.b32encode(password)
+			config.set("config", "encoded_password_b32", encoded_password)
+			config.set("config", "password", "") # clear plaintext
+			# save encoded password
+			f = file(config_filename, "w")
+			config.write(f)
+			f.close()
+
+		else:
+			encoded_password = config.get("config", "encoded_password_b32")
+			password = base64.b32decode(encoded_password)
+
+	return username, password
 
 class ConnectionException(Exception):
 	pass
@@ -122,20 +162,23 @@ def main():
 	# parse arguments
 	parser = OptionParser()
 	parser.add_option("-u", "--user", dest="username", help="", metavar="USERNAME")
+	parser.add_option("-c", "--config", dest="config", help="loads username/password from file", metavar="CONFIG")
 	options, args = parser.parse_args()
+
 	username = options.username
 	password = None
 
-	if username:
+	if options.config:
+		username, password = load_username_password(options.config)
+
+	if username and not password:
 		password = getpass()
 	if not username or not password:
 		parser.print_help()
 		return
+
 	# create application
 	inetkey = Inetkey(username, password)
-	# detect shutdown/kill signals
-	#~ signal.signal(signal.SIGINT, lambda signalnum, stack_frame: inetkey.close_firewall())
-	#~ signal.signal(signal.SIGTERM, lambda signalnum, stack_frame: inetkey.close_firewall())
 	# run
 	try:
 		while 1:

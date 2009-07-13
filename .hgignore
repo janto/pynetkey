@@ -1,0 +1,5 @@
+glob:*.pyc
+glob:build
+glob:pynetkey
+glob:pynetkey.zip
+glob:pynetkey.tar.gz

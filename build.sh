@@ -1,3 +1,3 @@
 rm -rf pynetkey
-svn co http://svn.assembla.com/svn/pynetkey
+hg clone . pynetkey
 tar -cvvzf pynetkey.tar.gz pynetkey

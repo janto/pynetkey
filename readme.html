@@ -5,14 +5,12 @@
 
 <h1> pynetkey</h1>
 
-<p>
-This program was <em><font color="red">not written by IT</font></em> and is not supported by them!<br />
-<a href="http://dip.sun.ac.za/~janto/pynetkey">http://dip.sun.ac.za/~janto/pynetkey</a><br />
-For help or bug reports email Janto Dreijer at jantod@gmail.com<br />
-</p>
-<p>
-Pynetkey's main goals are to be more robust and prettier (it sits in the system tray) than the existing inetkey/sinetkey.
-</p>
+<ul><li>This program was <em><font color="red">not written by IT</font></em> and is not supported by them!<br />
+<li><a href="http://dip.sun.ac.za/~janto/pynetkey">http://dip.sun.ac.za/~janto/pynetkey</a></li>
+<li>Bugs and feature requests go here <a href="http://bitbucket.org/janto/pynetkey/issues">http://bitbucket.org/janto/pynetkey/issues</a></li>
+<li>If you need help, email me (Janto Dreijer) at jantod@gmail.com</li>
+<li>Pynetkey's main goals are to be more robust and prettier (it sits in the system tray) than the existing inetkey/sinetkey.</li>
+</ul>
 
 <h2>Windows</h2>
 
@@ -50,15 +48,7 @@ To install the GUI version:
 	<ul>
 	<li>download <a href="pynetkey.tar.gz">pynetkey.tar.gz</a></li>
 	<li>get the bleeding edge sources from the repository
-		<pre>svn co checkout: http://svn.assembla.com/svn/pynetkey</pre>
-		for this to work you will need to set up the firewall in your  <code>~/.subversion/servers</code> file
-		<pre>
-[global]
-http-proxy-exceptions = *.sun.ac.za
-http-proxy-host = proxy.sun.ac.za
-http-proxy-port = 3128
-		</pre>
-		This is a bit of a catch-22 situation, since you already need something like inetkey to get to assembla.com. Sorry about that.
+		<pre>hg checkout http://dip.sun.ac.za/~janto/pynetkey/repo</pre>
 	</li>
 	</ul>
 </li>
@@ -98,12 +88,6 @@ close = 07:55
 <p>
 The password will automatically be encoded (<em>not encrypted</em>) to prevent wandering eyes from stealing your password.
 </p>
-
-<h2>todo</h2>
-<ul>
-<li>port to wx (easier to manage cross platform)
-<li>links to help file
-</ul>
 
 </body>
 </html>
