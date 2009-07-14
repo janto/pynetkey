@@ -6,7 +6,7 @@
 <h1> pynetkey</h1>
 
 <ul><li>This program was <em><font color="red">not written by IT</font></em> and is not supported by them!<br />
-<li><a href="http://dip.sun.ac.za/~janto/pynetkey">http://dip.sun.ac.za/~janto/pynetkey</a></li>
+<li>Local site: <a href="http://dip.sun.ac.za/~janto/pynetkey">http://dip.sun.ac.za/~janto/pynetkey</a></li>
 <li>Bugs and feature requests go here <a href="http://bitbucket.org/janto/pynetkey/issues">http://bitbucket.org/janto/pynetkey/issues</a></li>
 <li>If you need help, email me (Janto Dreijer) at jantod@gmail.com</li>
 <li>Pynetkey's main goals are to be more robust and prettier (it sits in the system tray) than the existing inetkey/sinetkey.</li>
@@ -44,11 +44,15 @@ To install the GUI version:
 <li>Install some packages:
 <pre>sudo apt-get install python-gtk2 python-gnome2-extras</pre>
 </li>
-<li>Download the source. There are two ways:
+<li>Download the source. There are three ways:
 	<ul>
 	<li>download <a href="pynetkey.tar.gz">pynetkey.tar.gz</a></li>
-	<li>get the bleeding edge sources from the repository
-		<pre>hg checkout http://dip.sun.ac.za/~janto/pynetkey/repo</pre>
+	<li>get the bleeding edge sources from the main repository:
+		<pre>hg clone http://bitbucket.org/janto/pynetkey/</pre>
+		for this to work you need to be already connected to the internet.
+	</li>
+	<li>get the source from a local repository mirror (might be slightly outdated):
+		<pre>hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo</pre>
 	</li>
 	</ul>
 </li>

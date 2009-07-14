@@ -6,7 +6,7 @@ This script is a minimal console version of pynetkey -- which is inetkey written
 
 http://sulug.sun.ac.za/sulugwiki/pynetkey
 
-WARNING: This script does not do any authentication of the server's certificate. It might even be sending the login details unencrypted. Maybe. Haven't checked it out in detail.
+WARNING: This script does not do any authentication of the server's certificate. It might even be sending the login details unencrypted. Probably not, but haven't checked it out in detail.
 Also, pynetkey is not supported by IT, but feel free to contact me if there is any problem.
 - Janto (jantod@gmail.com)
 http://bitbucket.org/janto/pynetkey
