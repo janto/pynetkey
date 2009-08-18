@@ -80,7 +80,7 @@ elif platform.system() == "Linux":
 	from gtktrayicon import GtkTrayIcon as TrayIcon
 	from gtk import main_quit as gui_quit
 	def open_url(url):
-		os.system('gnome-open %s' % url)
+		os.system('xdg-open %s' % url)
 	def workstation_is_locked():
 		return False
 	config_filename = os.path.expanduser("~/.inetkeyrc")
