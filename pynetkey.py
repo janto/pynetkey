@@ -453,9 +453,11 @@ class Inetkey(object):
 def main():
 	# get password and username
 	username, password = prompt_username_password()
+	config = ConfigParser.ConfigParser(dict(open_on_launch="1"))
+	config.read(config_filename)
 	if username and password:
 		# create application
-		inetkey = Inetkey(username, password)
+		inetkey = Inetkey(username, password, open_on_launch=config.get("config", "open_on_launch")=="1")
 		inetkey.run()
 		sys.exit() # makes sure everything is dead. get_usage() might take loooong to timeout.
 

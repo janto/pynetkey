@@ -83,11 +83,16 @@ Example:
 [config]
 username=12345678
 password=supersecret
+open_on_launch=1
 
 [events]
 open = 01:55
 close = 07:55
 </pre>
+
+<p>
+Setting open_on_launch=1 (the default) will open the firewall on launch. Set open_on_launch=0 to disable this feature.
+</p>
 
 <p>
 The password will automatically be encoded (<em>not encrypted</em>) to prevent wandering eyes from stealing your password.
