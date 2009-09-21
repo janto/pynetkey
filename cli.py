@@ -24,7 +24,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20090714"
+version = "pynetkey cli 20090921"
 connection_url = "https://fw.sun.ac.za:950"
 
 #~ import socket
