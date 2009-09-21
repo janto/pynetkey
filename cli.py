@@ -13,6 +13,7 @@ http://bitbucket.org/janto/pynetkey
 
 History
 ------
+Config file path can include "~" - Janto (Sep 2009)
 Optional load from config file - Janto (Jul 2009)
 Now also sends client version details on connect to future proof things - Janto (Apr 2009)
 Changed address from fw0.sun.ac.za to fw.sun.ac.za for SCN users - Janto (Oct 2008)
@@ -45,8 +46,9 @@ def load_username_password(config_filename):
 	username = None
 	password = None
 
+	config_filename = os.path.expanduser(config_filename)
 	if not os.path.exists(config_filename):
-		print "cant find %s" % config_filename
+		print "WARNING: can't find %s" % config_filename
 		return username, password
 
 	# make file user-level read/write only
