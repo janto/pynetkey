@@ -1,6 +1,8 @@
 #! /usr/bin/python
 
 from __future__ import with_statement
+import __init__
+
 import gtk
 try:
 	import egg.trayicon
@@ -8,7 +10,6 @@ except ImportError:
 	raise Exception('your probably need to run "sudo apt-get install python-gtk2 python-gnome2-extras"')
 
 import gobject
-
 gtk.gdk.threads_init()
 
 class GtkTrayIcon:
@@ -100,7 +101,7 @@ class PasswordDialog:
 
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 
-		self.window.set_title("Enter Info")
+		self.window.set_title("pynetkey %s" % __init__.version)
 
 		self.window.connect("delete_event", self.delete_event)
 
