@@ -5,7 +5,8 @@
 
 <h1> pynetkey</h1>
 
-<ul><li>This program was <em><font color="red">not written by IT</font></em> and is not supported by them!<br />
+<ul>
+<li>This program was <em><font color="red">not written by IT</font></em> and is not supported by them!<br />
 <li>Local site: <a href="http://dip.sun.ac.za/~janto/pynetkey">http://dip.sun.ac.za/~janto/pynetkey</a></li>
 <li>Bugs and feature requests go here <a href="http://bitbucket.org/janto/pynetkey/issues">http://bitbucket.org/janto/pynetkey/issues</a></li>
 <li>If you need help, email me (Janto Dreijer) at jantod@gmail.com</li>
@@ -15,9 +16,9 @@
 <h2>Windows</h2>
 
 <ol>
-<li>download <a href="pynetkey.zip">pynetkey.zip</a>
-<li>extract somewhere and run <code>pynetkey.exe</code>
-<li> (optional) create a shortcut to <code>pynetkey.exe</code> on your desktop
+<li>download <a href="pynetkey.zip">pynetkey.zip</a></li>
+<li>extract somewhere and run <code>pynetkey.exe</code></li>
+<li> (optional) create a shortcut to <code>pynetkey.exe</code> on your desktop</li>
 </ol>
 
 <h3>building from source</h3>
@@ -28,9 +29,9 @@ See the Ubuntu section to get the latest sources. Run <code>build.bat</code> to 
 
 Build requirements:
 <ul>
-<li> python2.5
-<li> py2exe
-<li> pywin32 (210 works. popup menu icons disappeared for 211,212,213)
+<li>python2.5</li>
+<li>py2exe</li>
+<li>pywin32 (210 works. popup menu icons disappeared for 211,212,213)</li>
 </ul>
 
 <h2>Ubuntu</h2>
@@ -49,7 +50,7 @@ To install the GUI version:
 	<li>download <a href="pynetkey.tar.gz">pynetkey.tar.gz</a></li>
 	<li>get the bleeding edge sources from the main repository:
 		<pre>hg clone http://bitbucket.org/janto/pynetkey/</pre>
-		for this to work you need to be already connected to the internet.
+		for this to work you need to already be connected to the internet.
 	</li>
 	<li>get the source from a local repository mirror (might be slightly outdated):
 		<pre>hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo pynetkey</pre>
@@ -62,41 +63,37 @@ To install the GUI version:
 
 <h2>Settings</h2>
 
-<p>
-To avoid prompting for the username and password every time you start pynetkey, you can place it in a config file.
-</p>
-<p>
-<em><font color="red">WARNING</font></em>: Please be aware how dangerous this is. If you don't know why this is dangerous, I suggest you rather not do it. Someone can easily steal your password. This is also why I won't make this feature easily available from the GUI. IT won't like the idea of people storing their passwords on disk.
-</p>
-
-Location (or just select "Edit config file..." from the popup menu):
+Pynetkey's default behaviour can be modified by creating a config file in the following location (or just select "Edit config file..." from the popup menu):
 <ul>
 <li>On Windows: <code>~\inetkey.ini</code> (i.e. <code>C:\Documents and Settings\username\inetkey.ini</code>)
 <li>On Linux: <code>~/.inetkeyrc</code>
 </ul>
 
 <p>
-You can also force open and close events at scheduled times. This is useful for things like late night downloads / torrents. The current implementation is accurate to within 30 seconds. Will fix if I ever have time.
+<em><font color="red">WARNING:</font></em> Please be aware how dangerous it is to store your username and password on your computer. If you don't know why this is dangerous, I suggest you rather not do it. Someone can easily steal your password. This is also why I won't make this feature easily available from the GUI. IT won't like the idea of people storing their passwords on disk.
+Pynetkey will automatically encode the password to prevent wandering eyes from stealing your password, but it is <em><font color="red">NOT</font></em> the same as it being encrypted.
+</p>
+
 <p>
+<ul>
+<li>Setting <code>open_on_launch=1</code> (the default) will open the firewall on launch. Set <code>open_on_launch=0</code> to disable this feature.</li>
+<li>If you're on Stellenbosch Community Network it might help setting <code>connection_url</code> to <code>https://fw4.sun.ac.za:950</code></li>
+<li>You can also force open and close events at scheduled times. This is useful for things like late night downloads / torrents. The current implementation is accurate to within 30 seconds. Will fix if I ever have time.</li>
+</ul>
+</p>
+
 Example:
 <pre>
 [config]
 username = 12345678
 password = supersecret
 open_on_launch = 1
+connection_url = https://fw.sun.ac.za:950
 
 [events]
 open = 01:55
 close = 07:55
 </pre>
-
-<p>
-Setting open_on_launch=1 (the default) will open the firewall on launch. Set open_on_launch=0 to disable this feature.
-</p>
-
-<p>
-The password will automatically be encoded (<em>not encrypted</em>) to prevent wandering eyes from stealing your password.
-</p>
 
 </body>
 </html>
