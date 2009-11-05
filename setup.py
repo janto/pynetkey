@@ -14,7 +14,7 @@ setup(
 	name = "pynetkey",
 	description = "inetkey in system tray",
 	zipfile = None, # put in exe
-	
+
 	data_files = [
 		("icons", icon_filenames),
 		("", ["readme.html"]),

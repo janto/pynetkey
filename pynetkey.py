@@ -453,7 +453,7 @@ class Inetkey(object):
 def main():
 	# get password and username
 	username, password = prompt_username_password()
-	
+
 	# open_on_launch check
 	config = ConfigParser.ConfigParser(dict(open_on_launch="1"))
 	config.read(config_filename)
@@ -461,7 +461,7 @@ def main():
 		open_on_launch = config.get("config", "open_on_launch") == "1"
 	except ConfigParser.NoSectionError:
 		open_on_launch = True
-	
+
 	if username and password:
 		# create application
 		inetkey = Inetkey(username, password, open_on_launch=open_on_launch)
