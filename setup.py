@@ -18,6 +18,7 @@ setup(
 	data_files = [
 		("icons", icon_filenames),
 		("", ["readme.html"]),
+		("", ["license.txt"]),
 	],
 
 	# targets to build
