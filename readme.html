@@ -1,24 +1,34 @@
 <html>
+<head>
+<title>Pynetkey</title>
+<style type="text/css">
+body {font-size:.75em; font-family:arial,helvetica;}
+
+h1,h2,h3,h4,h5,h6 {font-weight:bold; text-decoration:none;}
+h1,h2,h3 {padding-bottom:1px; margin-top:1.2em;margin-bottom:0.3em;}
+</style>
+</head>
 <body>
 
 <!-- <img src="icons/main.ico" /> -->
 
-<h1> pynetkey</h1>
+<h1>Pynetkey</h1>
+<p>
+This program was <em><font color="red">not written by IT</font></em> and is not supported by them!<br />
+Pynetkey's main goals are to be more robust and prettier (it sits in the system tray) than the existing inetkey/sinetkey. It also runs on both Windows and Linux systems. Pynetkey is released under the GPL.
+</p>
+<p>
+Main local site: <a href="http://dip.sun.ac.za/~janto/pynetkey">http://dip.sun.ac.za/~janto/pynetkey</a><br />
+Bugs and feature requests go here <a href="http://bitbucket.org/janto/pynetkey/issues">http://bitbucket.org/janto/pynetkey/issues</a><br />
+If you need help, email me (Janto Dreijer) at jantod@gmail.com
+</p>
 
-<ul>
-<li>This program was <em><font color="red">not written by IT</font></em> and is not supported by them!<br />
-<li>Local site: <a href="http://dip.sun.ac.za/~janto/pynetkey">http://dip.sun.ac.za/~janto/pynetkey</a></li>
-<li>Bugs and feature requests go here <a href="http://bitbucket.org/janto/pynetkey/issues">http://bitbucket.org/janto/pynetkey/issues</a></li>
-<li>If you need help, email me (Janto Dreijer) at jantod@gmail.com</li>
-<li>Pynetkey's main goals are to be more robust and prettier (it sits in the system tray) than the existing inetkey/sinetkey.</li>
-</ul>
-
-<h2>Windows</h2>
+<h2>Windows Installation</h2>
 
 <ol>
-<li>download <a href="pynetkey.zip">pynetkey.zip</a>
+<li>download <a href="pynetkey.zip">pynetkey.zip</a> from the main site
 <li>extract somewhere and run <code>pynetkey.exe</code>
-<li> (optional) create a shortcut to <code>pynetkey.exe</code> on your desktop
+<li> (optional) create a shortcut to <code>pynetkey.exe</code> (such as on your desktop)
 </ol>
 
 <h3>building from source</h3>
@@ -34,7 +44,7 @@ Build requirements:
 <li> pywin32 (210 works. popup menu icons disappeared for 211,212,213)
 </ul>
 
-<h2>Ubuntu</h2>
+<h2>Ubuntu Installation</h2>
 
 <p>
 The GUI version was developed with an ubuntu/gnome system in mind. A minimal non-gui version is also available as <a href="cli.py">cli.py</a> and should run on most systems.
@@ -48,9 +58,8 @@ To install the GUI version:
 <li>Download the source. There are three ways:
 	<ul>
 	<li>download <a href="pynetkey.tar.gz">pynetkey.tar.gz</a></li>
-	<li>get the bleeding edge sources from the main repository:
+	<li>get the bleeding edge sources from the main repository (for this to work you need to be already connected to the internet):
 		<pre>hg clone http://bitbucket.org/janto/pynetkey/</pre>
-		for this to work you need to be already connected to the internet.
 	</li>
 	<li>get the source from a local repository mirror (might be slightly outdated):
 		<pre>hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo pynetkey</pre>
@@ -61,25 +70,30 @@ To install the GUI version:
 <li> (optional) create a shortcut to <code>pynetkey.py</code> (you can use <code>icons/main.ico</code> as an icon)
 </ol>
 
-<h2>Settings</h2>
-
-<p>
-To avoid prompting for the username and password every time you start pynetkey, you can place it in a config file.
-</p>
+<h2>Config File</h2>
 <p>
 <em><font color="red">WARNING</font></em>: Please be aware how dangerous this is. If you don't know why this is dangerous, I suggest you rather not do it. Someone can easily steal your password. This is also why I won't make this feature easily available from the GUI. IT won't like the idea of people storing their passwords on disk.
 </p>
 
-Location (or just select "Edit config file..." from the popup menu):
+<h3>Location</h3>
+<p>
+Pynetkey's default behaviour can be modified by creating a config file in the following location (or just select "Edit config file..." from the popup menu):
 <ul>
 <li>On Windows: <code>~\inetkey.ini</code> (i.e. <code>C:\Documents and Settings\username\inetkey.ini</code>)
 <li>On Linux: <code>~/.inetkeyrc</code>
 </ul>
+</p>
 
+<h3>Settings</h3>
+<ul>
+<li>Pynetkey will automatically encode the password to prevent wandering eyes from stealing your password, but it is <em><font color="red">NOT</font></em> the same as it being encrypted.</li>
+<li>Setting <code>open_on_launch=1</code> (the default) will open the firewall on launch. Set <code>open_on_launch=0</code> to disable this feature.</li>
+<li>If you're on Stellenbosch Community Network it might help setting connection_url to <code>https://fw4.sun.ac.za:950</code> or fw1 or fw2...</li>
+<li>You can also force an open and close event at scheduled times. This is useful for things like late night downloads / torrents. The current implementation is accurate to within 30 seconds.</li>
+</ul>
+
+<h3>Example</h3>
 <p>
-You can also force open and close events at scheduled times. This is useful for things like late night downloads / torrents. The current implementation is accurate to within 30 seconds. Will fix if I ever have time.
-<p>
-Example:
 <pre>
 [config]
 username = 12345678
@@ -90,14 +104,6 @@ open_on_launch = 1
 open = 01:55
 close = 07:55
 </pre>
-
-<p>
-Setting open_on_launch=1 (the default) will open the firewall on launch. Set open_on_launch=0 to disable this feature.
-</p>
-
-<p>
-The password will automatically be encoded (<em>not encrypted</em>) to prevent wandering eyes from stealing your password.
-</p>
 
 </body>
 </html>
