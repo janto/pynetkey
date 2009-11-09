@@ -26,9 +26,9 @@ If you need help, email me (Janto Dreijer) at jantod@gmail.com
 <h2>Windows Installation</h2>
 
 <ol>
-<li>download <a href="pynetkey.zip">pynetkey.zip</a> from the main site
-<li>extract somewhere and run <code>pynetkey.exe</code>
-<li> (optional) create a shortcut to <code>pynetkey.exe</code> (such as on your desktop)
+<li>download <code>pynetkey.zip</code> from the main site</li>
+<li>extract somewhere and run <code>pynetkey.exe</code></li>
+<li>(optional) create a shortcut to <code>pynetkey.exe</code> (such as on your desktop)</li>
 </ol>
 
 <h3>building from source</h3>
@@ -39,15 +39,15 @@ See the Ubuntu section to get the latest sources. Run <code>build.bat</code> to 
 
 Build requirements:
 <ul>
-<li> python2.5
-<li> py2exe
-<li> pywin32 (210 works. popup menu icons disappeared for 211,212,213)
+<li>python2.5</li>
+<li>py2exe</li>
+<li>pywin32 (210 works. popup menu icons disappeared for 211,212,213)</li>
 </ul>
 
 <h2>Ubuntu Installation</h2>
 
 <p>
-The GUI version was developed with an ubuntu/gnome system in mind. A minimal non-gui version is also available as <a href="cli.py">cli.py</a> and should run on most systems.
+The GUI version was developed with an ubuntu/gnome system in mind. A minimal non-gui version is also available as <code>cli.py</code> and should run on most systems.
 </p>
 
 To install the GUI version:
@@ -57,7 +57,7 @@ To install the GUI version:
 </li>
 <li>Download the source. There are three ways:
 	<ul>
-	<li>download <a href="pynetkey.tar.gz">pynetkey.tar.gz</a></li>
+	<li>download <code>pynetkey.tar.gz</code> from the main site</li>
 	<li>get the bleeding edge sources from the main repository (for this to work you need to be already connected to the internet):
 		<pre>hg clone http://bitbucket.org/janto/pynetkey/</pre>
 	</li>
@@ -71,9 +71,9 @@ To install the GUI version:
 </ol>
 
 <h2>Config File</h2>
-<p>
-<em><font color="red">WARNING</font></em>: Please be aware how dangerous this is. If you don't know why this is dangerous, I suggest you rather not do it. Someone can easily steal your password. This is also why I won't make this feature easily available from the GUI. IT won't like the idea of people storing their passwords on disk.
-</p>
+
+<h3>Disclaimer</h3>
+<em><font color="red">WARNING:</font></em> Please be aware how dangerous it is to store your username and password on your computer. If you don't know why this is dangerous, I suggest you rather not do it. Someone can easily steal your password. This is also why I won't make this feature easily available from the GUI. IT won't like the idea of people storing their passwords on disk.
 
 <h3>Location</h3>
 <p>
@@ -88,7 +88,7 @@ Pynetkey's default behaviour can be modified by creating a config file in the fo
 <ul>
 <li>Pynetkey will automatically encode the password to prevent wandering eyes from stealing your password, but it is <em><font color="red">NOT</font></em> the same as it being encrypted.</li>
 <li>Setting <code>open_on_launch=1</code> (the default) will open the firewall on launch. Set <code>open_on_launch=0</code> to disable this feature.</li>
-<li>If you're on Stellenbosch Community Network it might help setting connection_url to <code>https://fw4.sun.ac.za:950</code> or fw1 or fw2...</li>
+<li>If you're on Stellenbosch Community Network it might help setting <code>connection_url</code> to <code>https://fw4.sun.ac.za:950</code> or fw1 or fw2...</li>
 <li>You can also force an open and close event at scheduled times. This is useful for things like late night downloads / torrents. The current implementation is accurate to within 30 seconds.</li>
 </ul>
 
@@ -99,11 +99,13 @@ Pynetkey's default behaviour can be modified by creating a config file in the fo
 username = 12345678
 password = supersecret
 open_on_launch = 1
+connection_url = https://fw.sun.ac.za:950
 
 [events]
 open = 01:55
 close = 07:55
 </pre>
+</p>
 
 </body>
 </html>

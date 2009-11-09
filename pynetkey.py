@@ -26,7 +26,7 @@ from __future__ import division, with_statement
 refresh_frequency = 6*60
 usage_query_frequency = 1*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
-connection_url = "https://fw.sun.ac.za:950"
+default_connection_url = "https://fw.sun.ac.za:950"
 connection_timeout = 15
 connection_retries = 3
 
@@ -242,7 +242,7 @@ class Statistics(object):
 
 class Inetkey(object):
 
-	def __init__(self, username, password, open_on_launch=True):
+	def __init__(self, username, password, connection_url, open_on_launch=True):
 		self.logger = logging.getLogger("Inetkey")
 		self.statistics = Statistics()
 		self.url = connection_url
@@ -470,16 +470,14 @@ def main():
 	username, password = prompt_username_password()
 
 	# open_on_launch check
-	config = ConfigParser.ConfigParser(dict(open_on_launch="1"))
+	config = ConfigParser.ConfigParser(dict(open_on_launch="1", connection_url=default_connection_url))
 	config.read(config_filename)
-	try:
-		open_on_launch = config.get("config", "open_on_launch") == "1"
-	except ConfigParser.NoSectionError:
-		open_on_launch = True
-
+	open_on_launch = config.get("config", "open_on_launch") == "1"
+	connection_url = config.get("config", "connection_url")
+	
 	if username and password:
 		# create application
-		inetkey = Inetkey(username, password, open_on_launch=open_on_launch)
+		inetkey = Inetkey(username, password, open_on_launch=open_on_launch, connection_url=connection_url)
 		inetkey.run()
 		sys.exit() # makes sure everything is dead. get_usage() might take loooong to timeout.
 
