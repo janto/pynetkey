@@ -3,16 +3,30 @@
 """
 
 This script is a minimal console version of pynetkey -- which is inetkey written in Python.
+http://bitbucket.org/janto/pynetkey
 
-http://sulug.sun.ac.za/sulugwiki/pynetkey
+Pynetkey is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-WARNING: This script does not do any authentication of the server's certificate. It might even be sending the login details unencrypted. Probably not, but haven't checked it out in detail.
+Pynetkey is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Pynetkey.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright 2009 Janto Dreijer <jantod@gmail.com>
+
+WARNING: This script does not do any authentication of the server's certificate. It might even be sending the login details unencrypted. Probably not, but I haven't checked it out in detail.
 Also, pynetkey is not supported by IT, but feel free to contact me if there is any problem.
 - Janto (jantod@gmail.com)
-http://bitbucket.org/janto/pynetkey
 
 History
 ------
+Placed under GPL - Janto (Dec 2009)
 Config file path can include "~" - Janto (Sep 2009)
 Optional load from config file - Janto (Jul 2009)
 Now also sends client version details on connect to future proof things - Janto (Apr 2009)
@@ -24,7 +38,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20090921"
+version = "pynetkey cli 20091209"
 connection_url = "https://fw.sun.ac.za:950"
 
 #~ import socket
