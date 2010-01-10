@@ -37,7 +37,6 @@ import urllib2, urllib
 import re
 from threading import Thread, Timer, Event
 
-from datetime import timedelta, datetime
 from time import localtime, strftime, sleep
 
 import os
@@ -205,46 +204,10 @@ def get_usage(username, password):
 		return result[-1]
 	return None
 
-class Statistics(object):
-
-	def __init__(self):
-		self.open_events = []
-		self.events = []
-
-	def firewall_open(self):
-		self.open_events.append(localtime())
-		self.events.append((localtime(), "open"))
-
-	def firewall_closed(self):
-		self.events.append((localtime(), "close"))
-
-	def firewall_error(self, text):
-		self.events.append((localtime(), "error", text))
-
-	def __str__(self):
-		d = {}
-		if self.open_events:
-			d["first opened"] = strftime("%a, %d %b %Y %H:%M:%S", self.open_events[0])
-			d["last opened"] = strftime("%a, %d %b %Y %H:%M:%S", self.open_events[-1])
-			firewall_open = timedelta(seconds=refresh_frequency) * len(self.open_events)
-			d["time firewall open"] = firewall_open
-			pynetkey_open = datetime(*localtime()[:-2]) - datetime(*self.open_events[0][:-2])
-			d["time pynetkey open"] = pynetkey_open
-			d["connected"] = firewall_open.seconds / pynetkey_open.seconds
-			d["refreshes"] = len(self.open_events)
-		return "{%s}" % ", ".join("'%s':'%s'" % (k, str(v)) for k, v in d.items())
-
-	def dump_to_file(self):
-		with file(os.path.join(root_dir, "stats.log"), "a+") as f:
-			f.write("%s\n" % self)
-			for event in self.events:
-				f.write("%s\n" % event)
-
 class Inetkey(object):
 
 	def __init__(self, username, password, connection_url, open_on_launch=True):
 		self.logger = logging.getLogger("Inetkey")
-		self.statistics = Statistics()
 		self.url = connection_url
 		self.username = username
 		self.password = password
@@ -325,7 +288,6 @@ class Inetkey(object):
 		self.usage_checker.stop()
 		self.retimer_check_schedule.stop()
 		self.close_firewall()
-		self.statistics.dump_to_file()
 
 	def run(self):
 		# create system tray menu
@@ -444,18 +406,15 @@ class Inetkey(object):
 	def connected(self, connected=True):
 		self.firewall_open = connected
 		if connected:
-			self.statistics.firewall_open()
 			self.logger.debug("opened")
 			self.systrayicon.set_icon(get_icon("green"), "connection open")
 		else:
-			self.statistics.firewall_closed()
 			self.logger.debug("closed")
 			self.systrayicon.set_icon(get_icon("orange"), "connection closed")
 
 	def error(self, text):
 		self.logger.error(text)
 		self.systrayicon.set_icon(get_icon("red"), text)
-		self.statistics.firewall_error(text)
 
 	def warn(self, text):
 		self.logger.debug(text)
@@ -474,7 +433,7 @@ def main():
 	config.read(config_filename)
 	open_on_launch = config.get("config", "open_on_launch") == "1"
 	connection_url = config.get("config", "connection_url")
-	
+
 	if username and password:
 		# create application
 		inetkey = Inetkey(username, password, open_on_launch=open_on_launch, connection_url=connection_url)
