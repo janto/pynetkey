@@ -1,4 +1,5 @@
 glob:*.pyc
+glob:*~
 glob:build
 glob:pynetkey
 glob:pynetkey.zip
