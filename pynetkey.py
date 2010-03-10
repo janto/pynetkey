@@ -428,8 +428,12 @@ def main():
 	# get password and username
 	username, password = prompt_username_password()
 
-	# open_on_launch check
-	config = ConfigParser.ConfigParser(dict(open_on_launch="1", connection_url=default_connection_url))
+	config = ConfigParser.ConfigParser()
+	# set default values
+	config.add_section("config")
+	config.set("config", "open_on_launch", "1")
+	config.set("config", "connection_url", default_connection_url)
+	# read settings
 	config.read(config_filename)
 	open_on_launch = config.get("config", "open_on_launch") == "1"
 	connection_url = config.get("config", "connection_url")
