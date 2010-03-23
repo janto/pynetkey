@@ -1,3 +1,3 @@
 rm -rf pynetkey
-hg clone http://bitbucket.org/janto/pynetkey pynetkey
+hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo pynetkey
 tar -cvvzf pynetkey.tar.gz pynetkey
