@@ -28,7 +28,7 @@ import gtk
 try:
 	import egg.trayicon
 except ImportError:
-	raise Exception('your probably need to run "sudo apt-get install python-gtk2 python-gnome2-extras"')
+	raise Exception('you probably need to run "sudo aptitude install python-eggtrayicon"')
 
 import gobject
 gtk.gdk.threads_init()
@@ -42,17 +42,15 @@ class GtkTrayIcon:
 
 	def set_icon(self, icon, hover_text=None):
 		def _set_icon(icon=icon, hover_text=hover_text):
-			if hover_text is not None:
-				#~ self.tooltips = gtk.Tooltips()
-				self.tooltips.set_tip(self.icon, hover_text)
 			self.image.set_from_file(icon)
+			#~ print "set", hover_text
+			if hover_text is not None:
+				self.icon.set_tooltip_text(hover_text)
 		gobject.idle_add(_set_icon)
 
 	def set_hover_text(self, text):
 		#~ print "text", text
-		#~ self.tooltips = gtk.Tooltips()
-		#~ self.tooltips.set_tip(self.icon, text)
-		gobject.idle_add(self.tooltips.set_tip, self.icon, text)
+		gobject.idle_add(self.icon.set_tooltip_text, text)
 
 	def construct(self, menu_options, on_quit=gtk.main_quit, startup=None):
 
@@ -71,8 +69,8 @@ class GtkTrayIcon:
 		self.eventbox.connect("button_press_event", self.button_press_callback)
 
 		# creates tooltips and attaches it to the icon
-		self.tooltips = gtk.Tooltips()
-		self.tooltips.set_tip(self.icon, 'pynetkey')
+		self.tooltips = gtk.Tooltip()
+		self.set_hover_text('pynetkey')
 		self.icon.show_all()
 
 		# creates the menu and adds items
