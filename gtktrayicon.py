@@ -56,22 +56,16 @@ class GtkTrayIcon:
 
 		# creates the tray icon
 		self.icon = egg.trayicon.TrayIcon("inetkey")
+		self.image = gtk.Image()
+		self.image.set_from_file("icons/orange.ico")
 
 		# uses a eventbox cause we cannot attach signals to a gtk.Image
 		self.eventbox = gtk.EventBox()
-		self.icon.add(self.eventbox)
-		self.image = gtk.Image()
-		self.image.set_from_file("icons/orange.ico")
-		#~ self.image = gtk.image_new_from_stock("gtk-apply", gtk.ICON_SIZE_SMALL_TOOLBAR)
 		self.eventbox.add(self.image)
-
-		# connects the button pressed signal
-		self.eventbox.connect("button_press_event", self.button_press_callback)
-
-		# creates tooltips and attaches it to the icon
-		self.tooltips = gtk.Tooltip()
-		self.set_hover_text('pynetkey')
+		self.eventbox.connect("button_press_event", self.button_press_callback) # connects the button pressed signal
+		self.icon.add(self.eventbox)
 		self.icon.show_all()
+		self.set_hover_text('pynetkey')
 
 		# creates the menu and adds items
 		menu_options.append(("Quit", None, on_quit))
@@ -168,8 +162,8 @@ if __name__ == '__main__':
 	print password_dialog()
 	menu_options = []
 	base = GtkTrayIcon()
-	menu_options.append(("Quit", None, gtk.main_quit))
-	menu_options.append(("beep", "icons/blue.ico", gtk.main_quit))
+	menu_options.append(("Quit with icon", "icons/blue.ico", gtk.main_quit))
 	menu_options.append(("-", None, lambda a: None))
-	menu_options.append(("change", None, lambda a: base.set_icon("icons/blue.ico", "connection")))
+	menu_options.append(("blue", None, lambda a: base.set_icon("icons/blue.ico", "connection")))
+	menu_options.append(("green", None, lambda a: base.set_icon("icons/green.ico", "connection")))
 	base.construct(menu_options)
