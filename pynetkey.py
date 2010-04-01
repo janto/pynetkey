@@ -30,6 +30,9 @@ default_connection_url = "https://fw.sun.ac.za:950"
 connection_timeout = 15
 connection_retries = 3
 
+import locale
+locale.setlocale(locale.LC_ALL, 'C') # necessary for scheduler to match days of week consistently
+
 import socket
 socket.setdefaulttimeout(connection_timeout) # global timeout
 import urllib2, urllib
@@ -286,15 +289,16 @@ class Inetkey(object):
 		#XXX hackish approach to schedule events
 		def check_schedule(_prev_check_time=["never"]):
 			time_as_text = strftime("%H:%M")
+			date_as_text = strftime("%a %H:%M").lower()
 			if _prev_check_time[0] == time_as_text:
 				return # already checked in this minute
-			self.logger.debug("checking for scheduled open or close")
+			self.logger.debug("checking for scheduled open or close (%s, %s)" % (time_as_text, date_as_text))
 
-			if time_as_text in config["open_times"]:
+			if time_as_text in config["open_times"] or date_as_text in config["open_times"]:
 				self.logger.info("opening as per schedule")
 				self.open_firewall()
 
-			if time_as_text in config["close_times"]:
+			if time_as_text in config["close_times"] or date_as_text in config["close_times"]:
 				self.logger.info("closing as per schedule")
 				self.close_firewall()
 
