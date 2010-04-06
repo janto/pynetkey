@@ -26,6 +26,7 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
+Certificate authentication - Janto (Apr 2010)
 Placed under GPL - Janto (Dec 2009)
 Config file path can include "~" - Janto (Sep 2009)
 Optional load from config file - Janto (Jul 2009)
@@ -38,7 +39,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20091209"
+version = "pynetkey cli 20100406"
 connection_url = "https://fw.sun.ac.za:950"
 
 #~ import socket
@@ -103,6 +104,7 @@ class Inetkey(object):
 		self.username = username
 		self.password = password
 		self.firewall_open = False
+		self.logger.warn("NOT AUTHENTICATING SERVER CERTIFICATE!")
 
 	def make_request(self, variables=[]):
 		if variables:
@@ -131,11 +133,11 @@ class Inetkey(object):
 		if "denied" in response:
 			raise ConnectionException(re.findall('FireWall-1 message: (.*)', response)[0].strip())
 		else:
-			self.info(re.findall('FireWall-1 message: (.*)', response)[0].strip())
+			self.logger.info(re.findall('FireWall-1 message: (.*)', response)[0].strip())
 		return session_id
 
 	def open_firewall(self):
-		self.info("opening firewall...")
+		self.logger.info("opening firewall...")
 		try:
 			session_id = self.authenticate()
 			# open request
@@ -143,12 +145,12 @@ class Inetkey(object):
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "1")])
 			self.connected(connected=True)
 		except ConnectionException, e:
-			self.error(str(e))
+			self.logger.error(str(e))
 
 	def close_firewall(self):
 		if not self.firewall_open:
 			return
-		self.info("closing firewall...")
+		self.logger.info("closing firewall...")
 		try:
 			session_id = self.authenticate()
 			# close request
@@ -156,7 +158,7 @@ class Inetkey(object):
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "2")])
 			self.connected(connected=False)
 		except ConnectionException, e:
-			self.error(str(e))
+			self.logger.error(str(e))
 
 	def connected(self, connected=True):
 		self.firewall_open = connected
@@ -165,21 +167,14 @@ class Inetkey(object):
 		else:
 			self.logger.info("firewall closed")
 
-	def error(self, text):
-		self.logger.error(text)
-
-	def warn(self, text):
-		self.logger.warn(text)
-
-	def info(self, text):
-		self.logger.info(text)
-
 def main():
 	# parse arguments
 	parser = OptionParser()
 	parser.add_option("-u", "--user", dest="username", help="", metavar="USERNAME")
 	parser.add_option("-c", "--config", dest="config", help="loads username/password from file", metavar="CONFIG")
 	options, args = parser.parse_args()
+
+	options.config = "~/.inetkeyrc"
 
 	username = options.username
 	password = None
