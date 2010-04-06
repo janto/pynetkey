@@ -30,6 +30,9 @@ default_connection_url = "https://fw.sun.ac.za:950"
 connection_timeout = 15
 connection_retries = 3
 
+import locale
+locale.setlocale(locale.LC_ALL, 'C') # necessary for scheduler to match days of week consistently
+
 import socket
 socket.setdefaulttimeout(connection_timeout) # global timeout
 import urllib2, urllib
@@ -104,7 +107,6 @@ else:
 	raise Exception(platform.system()+" not supported")
 
 # set up paths
-logger.debug("using config_filename %s" % config_filename)
 assert os.path.exists(TEMP_DIRECTORY), TEMP_DIRECTORY
 log_filename = os.path.join(TEMP_DIRECTORY, "pynetkey_error.txt")
 
@@ -149,39 +151,80 @@ def get_icon(name):
 import ConfigParser
 import base64
 import stat
+_cached_config = None
+def get_config_file():
+	"""Translate conf file into dict"""
+	
+	global _cached_config
+	if _cached_config is not None:
+		return _cached_config
+
+	logger.debug("reading config from %s" % config_filename)
+
+	if not os.path.exists(config_filename):
+		# create empty config file
+		file(config_filename, "w")
+
+	# make file user-level read/write only
+	os.chmod(config_filename, stat.S_IRUSR | stat.S_IWUSR)
+
+	# set default values
+	conf_obj = ConfigParser.ConfigParser()
+	conf_obj.add_section("config")
+	conf_obj.set("config", "username", "")
+	conf_obj.set("config", "password", "")
+	conf_obj.set("config", "encoded_password_b32", "")
+	conf_obj.set("config", "open_on_launch", "1")
+	conf_obj.set("config", "connection_url", default_connection_url)
+	conf_obj.add_section("events")
+	
+	# read settings
+	conf_obj.read(config_filename)
+	config = dict()
+	config["username"] = conf_obj.get("config", "username")
+	config["open_on_launch"] = conf_obj.get("config", "open_on_launch") == "1"
+	config["connection_url"] = conf_obj.get("config", "connection_url")
+	
+	# handle password
+	config["password"] = conf_obj.get("config", "password")
+	config["encoded_password_b32"] = conf_obj.get("config", "encoded_password_b32")
+	if config["password"]: # provided as plaintext
+		logger.debug("encoding password and saving into %s" % config_filename)
+		encoded_password = base64.b32encode(config["password"])
+		conf_obj.set("config", "encoded_password_b32", encoded_password)
+		conf_obj.set("config", "password", "") # clear plaintext
+		# save encoded password
+		with file(config_filename, "w") as f:
+			conf_obj.write(f)
+	elif config["encoded_password_b32"]: # assume password was encoded
+		logger.debug("decoding password")
+		config["password"] = base64.b32decode(config["encoded_password_b32"])
+	else: # no password provided
+		logger.debug("no password provided in conf file")
+		pass
+	
+	# handle scheduled open / close events
+	config["open_times"] = []
+	config["close_times"] = []
+	for name, t in sorted(conf_obj.items("events")):
+		t = t.lower() # try to be lenient 
+		if name.startswith("open"):
+			config["open_times"].append(t)
+			continue
+		if name.startswith("close"):
+			config["close_times"].append(t)
+			continue
+	logger.debug("open times: %s" % config["open_times"])
+	logger.debug("close times: %s" % config["close_times"])
+	
+	_cached_config = config
+	return config
+
 def prompt_username_password(force_prompt=False):
 	if not force_prompt:
-		logger.debug("reading from %s" % config_filename)
-
-		if not os.path.exists(config_filename):
-			# create empty config file
-			file(config_filename, "w")
-
-		# make file user-level read/write only
-		os.chmod(config_filename, stat.S_IRUSR | stat.S_IWUSR)
-
-		# process config file
-		config = ConfigParser.ConfigParser()
-		config.read(config_filename)
-		try:
-			username = config.get("config", "username")
-			password = config.get("config", "password")
-		except ConfigParser.NoSectionError:
-			pass # ignore config file
-		else:
-			if password: # provided as plaintext
-				encoded_password = base64.b32encode(password)
-				config.set("config", "encoded_password_b32", encoded_password)
-				config.set("config", "password", "") # clear plaintext
-				# save encoded password
-				with file(config_filename, "w") as f:
-					config.write(f)
-
-			else:
-				encoded_password = config.get("config", "encoded_password_b32")
-				password = base64.b32decode(encoded_password)
-
-			return username, password
+		config = get_config_file()
+		if config["username"] and config["password"]:
+			return config["username"], config["password"]
 	return password_dialog()
 
 def get_usage(username, password):
@@ -206,12 +249,15 @@ def get_usage(username, password):
 
 class Inetkey(object):
 
-	def __init__(self, username, password, connection_url, open_on_launch=True):
+	def __init__(self, username, password):
+		
+		config = get_config_file()
+		
 		self.logger = logging.getLogger("Inetkey")
-		self.url = connection_url
+		self.url = config["connection_url"]
 		self.username = username
 		self.password = password
-		self.open_on_launch = open_on_launch
+		self.open_on_launch = config["open_on_launch"]
 		self.firewall_open = False
 		self.close_on_workstation_locked = False
 
@@ -241,27 +287,18 @@ class Inetkey(object):
 
 		# scheduler
 		#XXX hackish approach to schedule events
-		open_time = None
-		close_time = None
-		if os.path.exists(config_filename):
-			config = ConfigParser.ConfigParser()
-			config.read(config_filename)
-			try:
-				open_time = config.get("events", "open", "")
-				close_time = config.get("events", "close", "")
-			except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
-				pass
 		def check_schedule(_prev_check_time=["never"]):
 			time_as_text = strftime("%H:%M")
+			date_as_text = strftime("%a %H:%M").lower()
 			if _prev_check_time[0] == time_as_text:
 				return # already checked in this minute
-			self.logger.debug("checking for scheduled open or close")
+			self.logger.debug("checking for scheduled open or close (%s, %s)" % (time_as_text, date_as_text))
 
-			if time_as_text == open_time:
+			if time_as_text in config["open_times"] or date_as_text in config["open_times"]:
 				self.logger.info("opening as per schedule")
 				self.open_firewall()
 
-			if time_as_text == close_time:
+			if time_as_text in config["close_times"] or date_as_text in config["close_times"]:
 				self.logger.info("closing as per schedule")
 				self.close_firewall()
 
@@ -427,20 +464,9 @@ class Inetkey(object):
 def main():
 	# get password and username
 	username, password = prompt_username_password()
-
-	config = ConfigParser.ConfigParser()
-	# set default values
-	config.add_section("config")
-	config.set("config", "open_on_launch", "1")
-	config.set("config", "connection_url", default_connection_url)
-	# read settings
-	config.read(config_filename)
-	open_on_launch = config.get("config", "open_on_launch") == "1"
-	connection_url = config.get("config", "connection_url")
-
 	if username and password:
 		# create application
-		inetkey = Inetkey(username, password, open_on_launch=open_on_launch, connection_url=connection_url)
+		inetkey = Inetkey(username, password)
 		inetkey.run()
 		sys.exit() # makes sure everything is dead. get_usage() might take loooong to timeout.
 
