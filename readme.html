@@ -55,7 +55,7 @@ Build requirements:
 <h2>Ubuntu Installation</h2>
 
 <p>
-The GUI version was developed with an ubuntu/gnome system in mind. A minimal non-gui version is also available as <code>cli.py</code> and should run on most systems.
+The GUI version was developed with an ubuntu/gnome system in mind. A minimal single-file non-gui version is also available as <code>cli.py</code> and should run on most systems.
 </p>
 
 To install the GUI version:
@@ -63,19 +63,19 @@ To install the GUI version:
 <li>Install some packages:
 <pre>sudo aptitude install python-eggtrayicon</pre>
 </li>
-<li>Download the source. There are three ways:
+<li>Get the source code. There are three ways:
 	<ul>
 	<li>download <code>pynetkey.tar.gz</code> from the main site</li>
-	<li>get the bleeding edge sources from the main repository (for this to work you need to be already connected to the internet):
-		<pre>hg clone http://bitbucket.org/janto/pynetkey/</pre>
-	</li>
-	<li>get the source from a local repository mirror (might be slightly outdated):
+	<li>pull the source from a local repository mirror (most stable, but might be slightly outdated):
 		<pre>hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo pynetkey</pre>
+	</li>
+	<li>pull the bleeding edge sources from the main repository (for this to work you need to be already connected to the internet):
+		<pre>hg clone http://bitbucket.org/janto/pynetkey/</pre>
 	</li>
 	</ul>
 </li>
 <li>run <code>pynetkey.py</a>
-<li> (optional) create a shortcut to <code>pynetkey.py</code> (you can use <code>icons/main.ico</code> as an icon)
+<li>(optional) create a shortcut to <code>pynetkey.py</code> (you can use <code>icons/main.ico</code> as an icon)
 </ol>
 
 <h2>Config File</h2>
@@ -110,8 +110,26 @@ open_on_launch = 1
 connection_url = https://fw.sun.ac.za:950
 
 [events]
-open = 01:55
-close = 07:55
+
+close1 = Mon 07:55
+
+open2 = Tue 01:55
+close2 = Tue 07:55
+
+open3 = Wed 01:55
+close3 = Wed 07:55
+
+open4 = Thu 01:55
+close4 = Thu 07:55
+
+open5 = Fri 01:55
+close5 = Fri 07:55
+
+open6 = Sat 01:55
+close6 = Sat 07:55
+
+open7 = Sat 16:55
+
 </pre>
 </p>
 
