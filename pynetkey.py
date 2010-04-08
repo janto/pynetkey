@@ -154,7 +154,7 @@ import stat
 _cached_config = None
 def get_config_file():
 	"""Translate conf file into dict"""
-	
+
 	global _cached_config
 	if _cached_config is not None:
 		return _cached_config
@@ -168,6 +168,24 @@ def get_config_file():
 	# make file user-level read/write only
 	os.chmod(config_filename, stat.S_IRUSR | stat.S_IWUSR)
 
+	# load password and save encoded back to config file
+	conf_obj = ConfigParser.ConfigParser()
+	conf_obj.add_section("config")
+	conf_obj.set("config", "password", "")
+	conf_obj.set("config", "encoded_password_b32", "")
+	conf_obj.read(config_filename)
+	password = conf_obj.get("config", "password")
+	if password: # provided as plaintext
+		logger.debug("encoding password and saving into %s" % config_filename)
+		encoded_password = base64.b32encode(password)
+		conf_obj.set("config", "encoded_password_b32", encoded_password)
+		conf_obj.set("config", "password", "") # clear plaintext
+		# save encoded password
+		with file(config_filename, "w") as f:
+			conf_obj.write(f)
+	del conf_obj # just to emphasize independance from rest of code
+	del password # just to emphasize independance from rest of code
+
 	# set default values
 	conf_obj = ConfigParser.ConfigParser()
 	conf_obj.add_section("config")
@@ -177,37 +195,31 @@ def get_config_file():
 	conf_obj.set("config", "open_on_launch", "1")
 	conf_obj.set("config", "connection_url", default_connection_url)
 	conf_obj.add_section("events")
-	
+
 	# read settings
 	conf_obj.read(config_filename)
 	config = dict()
 	config["username"] = conf_obj.get("config", "username")
 	config["open_on_launch"] = conf_obj.get("config", "open_on_launch") == "1"
 	config["connection_url"] = conf_obj.get("config", "connection_url")
-	
+
 	# handle password
 	config["password"] = conf_obj.get("config", "password")
 	config["encoded_password_b32"] = conf_obj.get("config", "encoded_password_b32")
 	if config["password"]: # provided as plaintext
-		logger.debug("encoding password and saving into %s" % config_filename)
-		encoded_password = base64.b32encode(config["password"])
-		conf_obj.set("config", "encoded_password_b32", encoded_password)
-		conf_obj.set("config", "password", "") # clear plaintext
-		# save encoded password
-		with file(config_filename, "w") as f:
-			conf_obj.write(f)
+		assert False, "password should have been encoded"
 	elif config["encoded_password_b32"]: # assume password was encoded
 		logger.debug("decoding password")
 		config["password"] = base64.b32decode(config["encoded_password_b32"])
 	else: # no password provided
-		logger.debug("no password provided in conf file")
+		logger.debug("no password provided in config file")
 		pass
-	
+
 	# handle scheduled open / close events
 	config["open_times"] = []
 	config["close_times"] = []
 	for name, t in sorted(conf_obj.items("events")):
-		t = t.lower() # try to be lenient 
+		t = t.lower() # try to be lenient
 		if name.startswith("open"):
 			config["open_times"].append(t)
 			continue
@@ -216,7 +228,7 @@ def get_config_file():
 			continue
 	logger.debug("open times: %s" % config["open_times"])
 	logger.debug("close times: %s" % config["close_times"])
-	
+
 	_cached_config = config
 	return config
 
@@ -250,9 +262,9 @@ def get_usage(username, password):
 class Inetkey(object):
 
 	def __init__(self, username, password):
-		
+
 		config = get_config_file()
-		
+
 		self.logger = logging.getLogger("Inetkey")
 		self.url = config["connection_url"]
 		self.username = username
