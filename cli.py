@@ -26,7 +26,7 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
-Certificate authentication - Janto (Apr 2010)
+Certificate authentication warning - Janto (Apr 2010)
 Placed under GPL - Janto (Dec 2009)
 Config file path can include "~" - Janto (Sep 2009)
 Optional load from config file - Janto (Jul 2009)
@@ -39,7 +39,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20100406"
+version = "pynetkey cli 20100408"
 connection_url = "https://fw.sun.ac.za:950"
 
 #~ import socket
@@ -173,8 +173,6 @@ def main():
 	parser.add_option("-u", "--user", dest="username", help="", metavar="USERNAME")
 	parser.add_option("-c", "--config", dest="config", help="loads username/password from file", metavar="CONFIG")
 	options, args = parser.parse_args()
-
-	options.config = "~/.inetkeyrc"
 
 	username = options.username
 	password = None

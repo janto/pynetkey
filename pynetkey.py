@@ -206,9 +206,9 @@ def get_config_file():
 	# handle password
 	config["password"] = conf_obj.get("config", "password")
 	config["encoded_password_b32"] = conf_obj.get("config", "encoded_password_b32")
-	if config["password"]: # provided as plaintext
+	if config["password"]: # password provided as plaintext
 		assert False, "password should have been encoded"
-	elif config["encoded_password_b32"]: # assume password was encoded
+	elif config["encoded_password_b32"]: # password was encoded
 		logger.debug("decoding password")
 		config["password"] = base64.b32decode(config["encoded_password_b32"])
 	else: # no password provided
