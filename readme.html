@@ -2,7 +2,7 @@
 <head>
 <title>Pynetkey</title>
 <style type="text/css">
-body {font-size:.75em; font-family:arial,helvetica;}
+body { font-family:arial,helvetica;}
 
 h1,h2,h3,h4,h5,h6 {font-weight:bold; text-decoration:none;}
 h1,h2,h3 {padding-bottom:1px; margin-top:1.2em;margin-bottom:0.3em;}
@@ -28,7 +28,7 @@ If you need help, email me (Janto Dreijer) at jantod@gmail.com
 Pynetkey is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 </p>
 <p>
-Pynetkey is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+Pynetkey is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the <a href="http://www.gnu.org/licenses/gpl.html">GNU General Public License</a> for more details.
 </p>
 
 <h2>Windows Installation</h2>
@@ -66,7 +66,7 @@ To install the GUI version:
 <li>Get the source code. There are three ways:
 	<ul>
 	<li>download <code>pynetkey.tar.gz</code> from the main site</li>
-	<li>pull the source from a local repository mirror (most stable, but might be slightly outdated):
+	<li>pull the source from a local repository mirror (often stable, but might be slightly outdated):
 		<pre>hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo pynetkey</pre>
 	</li>
 	<li>pull the bleeding edge sources from the main repository (for this to work you need to be already connected to the internet):
@@ -74,14 +74,11 @@ To install the GUI version:
 	</li>
 	</ul>
 </li>
-<li>run <code>pynetkey.py</a>
+<li>run <code>pynetkey.py</code>
 <li>(optional) create a shortcut to <code>pynetkey.py</code> (you can use <code>icons/main.ico</code> as an icon)
 </ol>
 
 <h2>Config File</h2>
-
-<h3>Disclaimer</h3>
-<em><font color="red">WARNING:</font></em> Please be aware how dangerous it is to store your username and password on your computer. If you don't know why this is dangerous, I suggest you rather not do it. Someone can easily steal your password. This is also why I won't make this feature easily available from the GUI. IT won't like the idea of people storing their passwords on disk.
 
 <h3>Location</h3>
 <p>
@@ -92,12 +89,35 @@ Pynetkey's default behaviour can be modified by creating a config file in the fo
 </ul>
 </p>
 
-<h3>Settings</h3>
-<ul>
-<li>Pynetkey will automatically encode the password to prevent wandering eyes from stealing your password, but it is <em><font color="red">NOT</font></em> the same as it being encrypted.</li>
-<li>Setting <code>open_on_launch=1</code> (the default) will open the firewall on launch. Set <code>open_on_launch=0</code> to disable this feature.</li>
-<li>If you're on Stellenbosch Community Network it might help setting <code>connection_url</code> to <code>https://fw4.sun.ac.za:950</code> or fw1 or fw2...</li>
-<li>You can also force an open and close event at scheduled times. This is useful for things like late night downloads / torrents. The current implementation is accurate to within 30 seconds.</li>
+<h3>Saving your username and password</h3>
+<p>
+<em><font color="red">WARNING:</font></em> Please be aware how dangerous it is to store your username and password on your computer.
+If you don't know why this is dangerous, I suggest you rather not do it.
+Someone can easily steal your password.
+This is also why I won't make this feature easily available from the GUI.
+IT does not like the idea of people storing their passwords on disk.
+</p>
+<p>
+Pynetkey will automatically encode the password to prevent wandering eyes from stealing your password, but it is <em><font color="red">NOT</font></em> the same as it being encrypted.
+</p>
+
+<h3>Scheduling</h3>
+<p>
+You can force an open or close events at scheduled times.
+This is useful for things like automated downloads / torrenting.
+The current implementation is accurate to within 30 seconds.
+</p>
+
+<p>
+Under the <code>[events]</code> section you need to have entries in the form of <code>close1 = Mon 07:55</code>.
+The day of week is optional, so <code>open3 = 02:00</code> will open the firewall each morning at 2 am.
+</p>
+
+<h3>Other Settings</h3>
+<p>
+Setting <code>open_on_launch=1</code> (the default) will open the firewall on launch. Set <code>open_on_launch=0</code> to disable this feature.
+</p>
+<p>If you're on Stellenbosch Community Network it might help setting <code>connection_url</code> to <code>https://fw4.sun.ac.za:950</code> or fw1 or fw2...</p>
 </ul>
 
 <h3>Example</h3>
