@@ -26,11 +26,11 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
-Certificate authentication warning - Janto (Apr 2010)
+Add some informative messages - Janto (Apr 2010)
 Placed under GPL - Janto (Dec 2009)
 Config file path can include "~" - Janto (Sep 2009)
 Optional load from config file - Janto (Jul 2009)
-Now also sends client version details on connect to future proof things - Janto (Apr 2009)
+Now also sends client version details on connect, to future proof things - Janto (Apr 2009)
 Changed address from fw0.sun.ac.za to fw.sun.ac.za for SCN users - Janto (Oct 2008)
 Only prompt for a password if we have a username - NM (Feb 2007)
 Initial version - Janto (Nov 2005)
@@ -39,7 +39,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20100408"
+version = "pynetkey cli 20100415"
 connection_url = "https://fw.sun.ac.za:950"
 
 #~ import socket
@@ -57,13 +57,22 @@ import ConfigParser
 import base64
 import os
 
+logging.root.setLevel(logging.INFO)
+log_format = "%(name)s@%(asctime)s: %(message)s"
+logging.basicConfig(
+	level=logging.DEBUG,
+	datefmt="%H:%M",
+	format=log_format,
+	)
+logger = logging.getLogger("Inetkey")
+
 def load_username_password(config_filename):
 	username = None
 	password = None
 
 	config_filename = os.path.expanduser(config_filename)
 	if not os.path.exists(config_filename):
-		print "WARNING: can't find %s" % config_filename
+		logger.error("file does not exist: %s\n" % config_filename)
 		return username, password
 
 	# make file user-level read/write only
@@ -99,12 +108,11 @@ class ConnectionException(Exception):
 class Inetkey(object):
 
 	def __init__(self, username, password):
-		self.logger = logging.getLogger("Inetkey")
 		self.url = connection_url
 		self.username = username
 		self.password = password
 		self.firewall_open = False
-		self.logger.warn("NOT AUTHENTICATING SERVER CERTIFICATE!")
+		logger.warn("Pynetkey does not currently authenticate the server certificate")
 
 	def make_request(self, variables=[]):
 		if variables:
@@ -119,53 +127,53 @@ class Inetkey(object):
 
 	def authenticate(self):
 		# get sesion ID
-		self.logger.debug("connecting")
+		logger.debug("connecting")
 		response = self.make_request()
 		session_id = re.findall('<INPUT TYPE="hidden" NAME="ID" VALUE="(.*)"', response)[0]
 		# send username
-		self.logger.debug("sending username")
+		logger.debug("sending username")
 		assert "user" in response.lower(), response
 		response = self.make_request([('ID', session_id), ('STATE', "1"), ('DATA', self.username)])
 		# send password
-		self.logger.debug("sending password")
+		logger.debug("sending password")
 		assert "password" in response.lower(), response
 		response = self.make_request([('ID', session_id), ('STATE', "2"), ('DATA', self.password)])
 		if "denied" in response:
 			raise ConnectionException(re.findall('FireWall-1 message: (.*)', response)[0].strip())
 		else:
-			self.logger.info(re.findall('FireWall-1 message: (.*)', response)[0].strip())
+			logger.info(re.findall('FireWall-1 message: (.*)', response)[0].strip())
 		return session_id
 
 	def open_firewall(self):
-		self.logger.info("opening firewall...")
+		logger.info("opening firewall...")
 		try:
 			session_id = self.authenticate()
 			# open request
-			self.logger.debug("sending 'sign-on' request")
+			logger.debug("sending 'sign-on' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "1")])
-			self.connected(connected=True)
+			self.set_connected_status(connected=True)
 		except ConnectionException, e:
-			self.logger.error(str(e))
+			logger.error(str(e))
 
 	def close_firewall(self):
 		if not self.firewall_open:
 			return
-		self.logger.info("closing firewall...")
+		logger.info("closing firewall...")
 		try:
 			session_id = self.authenticate()
 			# close request
-			self.logger.debug("sending 'sign-off' request")
+			logger.debug("sending 'sign-off' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "2")])
-			self.connected(connected=False)
+			self.set_connected_status(connected=False)
 		except ConnectionException, e:
-			self.logger.error(str(e))
+			logger.error(str(e))
 
-	def connected(self, connected=True):
+	def set_connected_status(self, connected=True):
 		self.firewall_open = connected
 		if connected:
-			self.logger.info("firewall open")
+			logger.info("firewall open. press <Ctrl> C to close")
 		else:
-			self.logger.info("firewall closed")
+			logger.info("firewall closed")
 
 def main():
 	# parse arguments
@@ -198,6 +206,4 @@ def main():
 	inetkey.close_firewall()
 
 if __name__ == '__main__':
-	logging.root.setLevel(logging.INFO)
-	logging.basicConfig()
 	main()
