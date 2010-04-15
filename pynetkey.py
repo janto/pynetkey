@@ -325,7 +325,7 @@ class Inetkey(object):
 
 	def startup(self, systrayicon):
 		self.systrayicon = systrayicon
-		self.connected(False)
+		self.set_connected_status(False)
 		if self.open_on_launch:
 			self.open_firewall()
 		self.refresher.start()
@@ -374,7 +374,7 @@ class Inetkey(object):
 		menu_options.append(("-", None, None))
 		menu_options.append(("User admin page...", None, lambda e: open_url('http://www.sun.ac.za/useradm')))
 		menu_options.append(("Firewall usage...", None, lambda e: open_url('https://maties2.sun.ac.za/fwusage/')))
-		menu_options.append(("Tariff structure...", None, lambda e: open_url('http://infoteg.sun.ac.za/infoteg/IN_Tariewe_E.htm')))
+		menu_options.append(("Tariff structure...", None, lambda e: open_url('http://infoteg.sun.ac.za/infoteg/IN_Tariewe_A.htm')))
 		menu_options.append(("-", None, None))
 		self.systrayicon.construct(menu_options, startup=self.startup, on_quit=lambda e: on_quit())
 
@@ -431,7 +431,7 @@ class Inetkey(object):
 			# open request
 			self.logger.debug("sending 'sign-on' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "1")])
-			self.connected(connected=True)
+			self.set_connected_status(connected=True)
 		except ConnectionException, e:
 			self.error(str(e))
 			#~ raise
@@ -445,15 +445,15 @@ class Inetkey(object):
 			# close request
 			self.logger.debug("sending 'sign-off' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "2")])
-			self.connected(connected=False)
+			self.set_connected_status(connected=False)
 		except ConnectionException, e:
 			self.error(str(e))
 
 # ---------------
 # display
 
-	def connected(self, connected=True):
-		self.firewall_open = connected
+	def set_connected_status(self, connected=True):
+		self.firewall_open = connected # set state
 		if connected:
 			self.logger.debug("opened")
 			self.systrayicon.set_icon(get_icon("green"), "connection open")

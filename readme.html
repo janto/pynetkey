@@ -15,7 +15,7 @@ h1,h2,h3 {padding-bottom:1px; margin-top:1.2em;margin-bottom:0.3em;}
 <h1>Pynetkey</h1>
 <p>
 This program was <em><font color="red">not written by IT</font></em> and is not supported by them!<br />
-Pynetkey's main goals are to be more robust and prettier (it sits in the system tray) than the existing inetkey/sinetkey. It also runs on both Windows and Linux systems. Pynetkey is released under the GPL.
+Pynetkey's main goals are to be more robust and attractive (it sits in the system tray) than the existing inetkey/sinetkey. It also runs on both Windows and Linux systems. Pynetkey is released under the GPL.
 </p>
 <p>
 Main local site: <a href="http://dip.sun.ac.za/~janto/pynetkey">http://dip.sun.ac.za/~janto/pynetkey</a><br />
@@ -106,7 +106,13 @@ Pynetkey will automatically encode the password to prevent wandering eyes from s
 You can force an open or close events at scheduled times.
 This is useful for things like automated downloads / torrenting.
 The current implementation is accurate to within 30 seconds.
+<p>
+The events in the example config file might also be useful. It will open the firewall 5 minutes before the low cost time frame and close it 5 minutes before it ends.
 </p>
+<p>
+Remember the amount you get charged depends on the timeslot in which your download finishes. Also, configure your download manager / torrent application to stop in time. Don't trust that your download will stop just because you closed the firewall.
+</p>
+
 
 <p>
 Under the <code>[events]</code> section you need to have entries in the form of <code>close1 = Mon 07:55</code>.
@@ -132,23 +138,23 @@ connection_url = https://fw.sun.ac.za:950
 [events]
 
 close1 = Mon 07:55
+open1 = Mon 23:55
 
-open2 = Tue 01:55
 close2 = Tue 07:55
+open2 = Tue 23:55
 
-open3 = Wed 01:55
 close3 = Wed 07:55
+open3 = Wed 23:55
 
-open4 = Thu 01:55
 close4 = Thu 07:55
+open4 = Thu 23:55
 
-open5 = Fri 01:55
 close5 = Fri 07:55
+open5 = Fri 23:55
 
-open6 = Sat 01:55
 close6 = Sat 07:55
+open6 = Sat 16:55
 
-open7 = Sat 16:55
 
 </pre>
 </p>
