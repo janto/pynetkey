@@ -26,13 +26,15 @@ from __future__ import division, with_statement
 refresh_frequency = 6*60
 usage_query_frequency = 1*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
-default_connection_url = "https://fw.sun.ac.za:950"
+default_connection_hostname = "146.232.129.195"
+connection_port = 950
 connection_timeout = 15
 connection_retries = 3
 
 import locale
 locale.setlocale(locale.LC_ALL, 'C') # necessary for scheduler to match days of week consistently
 
+import ssl
 import socket
 socket.setdefaulttimeout(connection_timeout) # global timeout
 import urllib2, urllib
@@ -193,7 +195,7 @@ def get_config_file():
 	conf_obj.set("config", "password", "")
 	conf_obj.set("config", "encoded_password_b32", "")
 	conf_obj.set("config", "open_on_launch", "1")
-	conf_obj.set("config", "connection_url", default_connection_url)
+	conf_obj.set("config", "connection_hostname", default_connection_hostname)
 	conf_obj.add_section("events")
 
 	# read settings
@@ -201,7 +203,7 @@ def get_config_file():
 	config = dict()
 	config["username"] = conf_obj.get("config", "username")
 	config["open_on_launch"] = conf_obj.get("config", "open_on_launch") == "1"
-	config["connection_url"] = conf_obj.get("config", "connection_url")
+	config["connection_hostname"] = conf_obj.get("config", "connection_hostname")
 
 	# handle password
 	config["password"] = conf_obj.get("config", "password")
@@ -266,7 +268,7 @@ class Inetkey(object):
 		config = get_config_file()
 
 		self.logger = logging.getLogger("Inetkey")
-		self.url = config["connection_url"]
+		self.connection_hostname = config["connection_hostname"]
 		self.username = username
 		self.password = password
 		self.open_on_launch = config["open_on_launch"]
@@ -383,36 +385,52 @@ class Inetkey(object):
 
 	def make_request(self, variables=[]):
 		e = "error connecting"
-		for retry in range(connection_retries):
-			try:
-				if variables:
-					variables.insert(0, ("client", version)) # maybe IT will one day want to block a specific version?
-					request = urllib2.Request(url=self.url, data=urllib.urlencode(variables))
-				else:
-					request = urllib2.Request(url=self.url)
-				request.timeout = connection_timeout #XXX hack to make it work with python2.6
-				#~ self.logger.debug(request.get_data())
-				response = urllib2.HTTPSHandler().https_open(request).read()
-			except urllib2.URLError, e:
-				self.logger.debug("attempt %d failed: %s" % (retry, str(e)))
-				continue # try again
-			except Exception, e:
-				#~ raise
-				raise ConnectionException(str(e))
-			if not response:
-				raise ConnectionException("no response from server")
-			if "denied" in response or "ERROR" in response:
-				raise ConnectionException(re.findall('FireWall-1 message: (.*)', response)[0].strip())
+		for retry in range(connection_retries): #XXX technically unused
+			# python's urllib sucks. easier to do things directly with sockets
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			ssl_sock = ssl.wrap_socket(s,
+				#~ ca_certs="/etc/ca_certs_file",
+				cert_reqs=ssl.CERT_NONE,
+				#~ cert_reqs=ssl.CERT_REQUIRED,
+				#~ ssl_version=ssl.PROTOCOL_SSLv3,
+				ssl_version=ssl.PROTOCOL_TLSv1,
+			)
+			ssl_sock.connect((self.connection_hostname, connection_port))
 
+			#~ print repr(ssl_sock.getpeername())
+			#~ print ssl_sock.cipher()
+			#~ print pprint.pformat(ssl_sock.getpeercert())
+
+			encoded_variables = urllib.urlencode(variables)
+			request = "\r\n".join([
+				"POST / HTTP/1.1" if variables else "GET / HTTP/1.1",
+				"Host: %s" % self.connection_hostname,
+				"User-Agent: %s" % version,
+				"Content-Length: %d" % len(encoded_variables),
+				"Referer: https://%s:%d/" % (self.connection_hostname, connection_port),
+				"",
+				encoded_variables,
+			])
+			#~ print request
+			#~ print
+			ssl_sock.write(request)
+
+			# Read a chunk of data.  Will not necessarily read all the data returned by the server.
+			response = ssl_sock.read()
+			#~ print response
+
+			# note that closing the SSLSocket will also close the underlying socket
+			ssl_sock.close()
+			
 			# break from retry loop
 			return response
 		raise ConnectionException(str(e))
 
 	def authenticate(self):
 		# get sesion ID
-		self.logger.debug("connecting")
+		logger.debug("connecting")
 		response = self.make_request()
-		session_id = re.findall('<INPUT TYPE="hidden" NAME="ID" VALUE="(.*)"', response)[0]
+		session_id = re.findall('<input type="hidden" name="ID" value="(.*)"', response)[0]
 		# send username
 		self.logger.debug("sending username")
 		assert "user" in response.lower(), response
@@ -421,7 +439,11 @@ class Inetkey(object):
 		self.logger.debug("sending password")
 		assert "password" in response.lower(), response
 		response = self.make_request([('ID', session_id), ('STATE', "2"), ('DATA', self.password)])
-		self.info(re.findall('FireWall-1 message: (.*)', response)[0].strip())
+		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
+		if "denied" in response:
+			raise ConnectionException(stripped_response)
+		else:
+			self.logger.info(stripped_response)
 		return session_id
 
 	def open_firewall(self):

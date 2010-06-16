@@ -123,7 +123,10 @@ The day of week is optional, so <code>open3 = 02:00</code> will open the firewal
 <p>
 Setting <code>open_on_launch=1</code> (the default) will open the firewall on launch. Set <code>open_on_launch=0</code> to disable this feature.
 </p>
-<p>If you're on Stellenbosch Community Network it might help setting <code>connection_url</code> to <code>https://fw4.sun.ac.za:950</code> or fw1 or fw2...</p>
+<p>
+The <code>connection_url</code> setting has been removed.
+</p>
+<!-- <p>If you're on Stellenbosch Community Network it might help setting <code>connection_hostname</code> to <code>fw4.sun.ac.za</code> or fw1 or fw2...</p> -->
 </ul>
 
 <h3>Example</h3>
@@ -133,7 +136,6 @@ Setting <code>open_on_launch=1</code> (the default) will open the firewall on la
 username = 12345678
 password = supersecret
 open_on_launch = 1
-connection_url = https://fw.sun.ac.za:950
 
 [events]
 

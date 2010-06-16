@@ -40,7 +40,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20100615"
+version = "pynetkey cli 20100616"
 connection_hostname = "146.232.129.195"
 connection_port = 950
 
