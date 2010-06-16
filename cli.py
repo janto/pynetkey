@@ -26,6 +26,7 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
+Firewall changed to TLS - Janto (Jun 2010)
 Add some informative messages - Janto (Apr 2010)
 Placed under GPL - Janto (Dec 2009)
 Config file path can include "~" - Janto (Sep 2009)
@@ -39,10 +40,12 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20100415"
-connection_url = "https://fw.sun.ac.za:950"
+version = "pynetkey cli 20100615"
+connection_hostname = "146.232.129.195"
+connection_port = 950
 
-#~ import socket
+import socket
+import ssl
 #~ socket.setdefaulttimeout(connection_timeout) # global timeout
 import urllib2, urllib
 import logging
@@ -108,28 +111,55 @@ class ConnectionException(Exception):
 class Inetkey(object):
 
 	def __init__(self, username, password):
-		self.url = connection_url
 		self.username = username
 		self.password = password
 		self.firewall_open = False
 		logger.warn("Pynetkey does not currently authenticate the server certificate")
 
 	def make_request(self, variables=[]):
-		if variables:
-			variables.insert(0, ("client", version)) # maybe IT will one day want to block a specific version?
-			request = urllib2.Request(url=self.url, data=urllib.urlencode(variables))
-		else:
-			request = urllib2.Request(url=self.url)
-		request.timeout = connection_timeout #XXX hack to make it work with python2.6
-		response = urllib2.HTTPSHandler().https_open(request).read()
-		assert "ERROR" not in response, response
+		# python's urllib sucks. easier to do things directly with sockets
+		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		ssl_sock = ssl.wrap_socket(s,
+			#~ ca_certs="/etc/ca_certs_file",
+			cert_reqs=ssl.CERT_NONE,
+			#~ cert_reqs=ssl.CERT_REQUIRED,
+			#~ ssl_version=ssl.PROTOCOL_SSLv3,
+			ssl_version=ssl.PROTOCOL_TLSv1,
+		)
+		ssl_sock.connect((connection_hostname, connection_port))
+
+		#~ print repr(ssl_sock.getpeername())
+		#~ print ssl_sock.cipher()
+		#~ print pprint.pformat(ssl_sock.getpeercert())
+
+		encoded_variables = urllib.urlencode(variables)
+		request = "\r\n".join([
+			"POST / HTTP/1.1" if variables else "GET / HTTP/1.1",
+			"Host: %s" % connection_hostname,
+			"User-Agent: %s" % version,
+			"Content-Length: %d" % len(encoded_variables),
+			"Referer: https://%s:%d/" % (connection_hostname, connection_port),
+			"",
+			encoded_variables,
+		])
+		#~ print request
+		#~ print
+		ssl_sock.write(request)
+
+		# Read a chunk of data.  Will not necessarily read all the data returned by the server.
+		response = ssl_sock.read()
+		#~ print response
+
+		# note that closing the SSLSocket will also close the underlying socket
+		ssl_sock.close()
+		
 		return response
 
 	def authenticate(self):
 		# get sesion ID
 		logger.debug("connecting")
 		response = self.make_request()
-		session_id = re.findall('<INPUT TYPE="hidden" NAME="ID" VALUE="(.*)"', response)[0]
+		session_id = re.findall('<input type="hidden" name="ID" value="(.*)"', response)[0]
 		# send username
 		logger.debug("sending username")
 		assert "user" in response.lower(), response
@@ -138,10 +168,11 @@ class Inetkey(object):
 		logger.debug("sending password")
 		assert "password" in response.lower(), response
 		response = self.make_request([('ID', session_id), ('STATE', "2"), ('DATA', self.password)])
+		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
 		if "denied" in response:
-			raise ConnectionException(re.findall('FireWall-1 message: (.*)', response)[0].strip())
+			raise ConnectionException(stripped_response)
 		else:
-			logger.info(re.findall('FireWall-1 message: (.*)', response)[0].strip())
+			logger.info(stripped_response)
 		return session_id
 
 	def open_firewall(self):
