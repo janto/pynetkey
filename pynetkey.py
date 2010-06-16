@@ -256,7 +256,7 @@ def get_usage(username, password):
 
 	result = re.findall('<td align="right"><font size="1">(.*)</font></td>', data)
 	if result:
-		return result[-1]
+		return result[-1], result[-2]
 	return None
 
 class Inetkey(object):
@@ -289,9 +289,9 @@ class Inetkey(object):
 			self.logger.debug("querying usage")
 			try:
 				usage = get_usage(self.username, self.password)
-				self.logger.debug("usage query result: %s" % usage)
-				if usage:
-					self.systrayicon.set_hover_text("R%s" % usage)
+				self.logger.debug("usage query result: %s" % `usage`)
+				if usage is not None:
+					self.systrayicon.set_hover_text("R%s = %s MB" % usage)
 			except Exception, e:
 				#~ raise
 				self.systrayicon.set_hover_text("error checking usage: "+str(e))
