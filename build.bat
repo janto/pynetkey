@@ -1,4 +1,4 @@
-C:\Python25\python.exe setup.py py2exe --bundle 1
+C:\Python26\python.exe setup.py py2exe --bundle 1
 rmdir /Q /S pynetkey
 rename dist pynetkey
 del pynetkey.zip
