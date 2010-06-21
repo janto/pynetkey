@@ -26,7 +26,7 @@ from __future__ import division, with_statement
 refresh_frequency = 6*60
 usage_query_frequency = 1*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
-default_connection_hostname = "146.232.129.195"
+default_connection_hostname = "fw.sun.ac.za"
 connection_port = 950
 connection_timeout = 15
 connection_retries = 3
@@ -421,7 +421,7 @@ class Inetkey(object):
 
 			# note that closing the SSLSocket will also close the underlying socket
 			ssl_sock.close()
-			
+
 			# break from retry loop
 			return response
 		raise ConnectionException(str(e))
