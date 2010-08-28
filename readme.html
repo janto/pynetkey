@@ -2,10 +2,13 @@
 <head>
 <title>Pynetkey</title>
 <style type="text/css">
-body { font-family:arial,helvetica;}
+body {
+	font-family:arial,helvetica;
+	}
 
-h1,h2,h3,h4,h5,h6 {font-weight:bold; text-decoration:none;}
-h1,h2,h3 {padding-bottom:1px; margin-top:1.2em;margin-bottom:0.3em;}
+h1,h2 {
+	background-color:#99CCFF;
+	}
 </style>
 </head>
 <body>
@@ -66,7 +69,7 @@ To install the GUI version:
 <li>Get the source code. There are three ways:
 	<ul>
 	<li>download <code>pynetkey.tar.gz</code> from the main site</li>
-	<li>pull the source from a local repository mirror (often stable, but might be slightly outdated):
+	<li>pull the stable source from a local repository mirror:
 		<pre>hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo pynetkey</pre>
 	</li>
 	<li>pull the bleeding edge sources from the main repository (for this to work you need to be already connected to the internet):
@@ -84,7 +87,7 @@ To install the GUI version:
 <p>
 Pynetkey's default behaviour can be modified by creating a config file in the following location (or just select "Edit config file..." from the popup menu):
 <ul>
-<li>On Windows: <code>~\inetkey.ini</code> (i.e. <code>C:\Documents and Settings\username\inetkey.ini</code>)
+<li>On Windows: <code>~\inetkey.ini</code> (usually <code>C:\Documents and Settings\username\inetkey.ini</code>)
 <li>On Linux: <code>~/.inetkeyrc</code>
 </ul>
 </p>
@@ -156,10 +159,14 @@ open5 = Fri 23:55
 
 close6 = Sat 07:55
 open6 = Sat 16:55
-
-
 </pre>
 </p>
 
+<h2>Tips and Tricks</h2>
+<p>
+If you want fully daemon-like behaviour you might be interested in the following command:
+<code>screen -d -m ./cli.py -c ~/.inetkeyrc</code>
+This will create a screen session and immediatly detach it. cli.py will continue to log in and stay connected. You will need to attach the screen with <code>screen -r</code> to log out when you're done.
+</p>
 </body>
 </html>

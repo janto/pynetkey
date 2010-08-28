@@ -28,7 +28,13 @@ import gtk
 try:
 	import egg.trayicon
 except ImportError:
-	raise Exception('you probably need to run "sudo aptitude install python-eggtrayicon"')
+	message = 'Error loading egg.trayicon. You probably need to run "sudo aptitude install python-eggtrayicon" from a console.'
+	dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR,
+			       gtk.BUTTONS_NONE, message)
+	dialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
+	dialog.run()
+	dialog.destroy()
+	raise Exception(message)
 
 import gobject
 gtk.gdk.threads_init()
