@@ -26,6 +26,7 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
+Minor error handling - Janto (Sep 2010)
 Firewall changed to TLS - Janto (Jun 2010)
 Add some informative messages - Janto (Apr 2010)
 Placed under GPL - Janto (Dec 2009)
@@ -40,7 +41,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20100622"
+version = "pynetkey cli 20100925"
 connection_hostname = "fw.sun.ac.za"
 connection_port = 950
 
@@ -157,7 +158,10 @@ class Inetkey(object):
 
 	def authenticate(self):
 		# get sesion ID
-		logger.debug("connecting")
+		try:
+			response = self.make_request()
+		except (ssl.SSLError, socket.error), e:
+			raise ConnectionException(e)
 		response = self.make_request()
 		session_id = re.findall('<input type="hidden" name="ID" value="(.*)"', response)[0]
 		# send username
