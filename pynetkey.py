@@ -429,7 +429,10 @@ class Inetkey(object):
 	def authenticate(self):
 		# get sesion ID
 		logger.debug("connecting")
-		response = self.make_request()
+		try:
+			response = self.make_request()
+		except (ssl.SSLError, socket.error), e:
+			raise ConnectionException(e)
 		session_id = re.findall('<input type="hidden" name="ID" value="(.*)"', response)[0]
 		# send username
 		self.logger.debug("sending username")
