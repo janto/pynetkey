@@ -8,7 +8,7 @@ def main():
 	data_dir = os.path.abspath(".")
 	base_dir = "/tmp/pynetkey"
 	deb_dir = os.path.join(base_dir, "DEBIAN")
-	install_dir = os.path.join(base_dir, "")
+	install_dir = os.path.join(base_dir, "usr/share/pyshared/pynetkey")
 	try:
 		os.makedirs(deb_dir)
 	except OSError:
@@ -17,6 +17,8 @@ def main():
 		os.makedirs(install_dir)
 	except OSError:
 		pass
+
+	os.system("hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo %s" % install_dir)
 
 	control_text = """
 Package: pynetkey
@@ -29,7 +31,7 @@ Depends: python-eggtrayicon, python (>=2.6)
 Installed-Size: 128
 Maintainer: Janto Dreijer <jantod@gmail.com>
 Provides: pynetkey
-Description: GPL alternative to the official inetkey/sinetkey.
+Description: Unofficial GPL alternative to inetkey/sinetkey.
 	Its goals are to be more robust and provide some extra functionality.
 """ % dict(version=version)
 	with file(os.path.join(deb_dir, "control"), "w") as f:
