@@ -8,8 +8,13 @@ import shutil
 def main():
 	data_dir = os.path.abspath(".")
 	base_dir = "/tmp/pynetkey"
-	shutil.rmtree(base_dir)
+	print "deleting base_dir"
+	try:
+		shutil.rmtree(base_dir)
+	except OSError:
+		pass
 
+	print "pulling from dip.sun.ac.za"
 	install_dir = os.path.join(base_dir, "usr/share/pyshared/pynetkey")
 	try:
 		os.makedirs(install_dir)
@@ -17,6 +22,7 @@ def main():
 		pass
 	os.system("hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo %s" % install_dir)
 
+	print "creating files."
 	shortcut_dir = os.path.join(base_dir, "usr/share/applications")
 	try:
 		os.makedirs(shortcut_dir)
@@ -90,14 +96,23 @@ Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 		f.write(copyright_text)
 
 	with file(os.path.join(deb_dir, "postinst"), "w") as f:
-		f.write("#!/bin/sh\n")
+		f.write("""
+#!/bin/sh
+ln --symbolic /usr/share/pyshared/pynetkey/cli.py /usr/bin/pynetkey
+""".lstrip())
 	os.chmod(os.path.join(deb_dir, "postinst"), 0755) # make executable
 
 	with file(os.path.join(deb_dir, "prerm"), "w") as f:
-		f.write("#!/bin/sh\n")
+				f.write("""
+#!/bin/sh
+rm /usr/bin/pynetkey
+""".lstrip())
 	os.chmod(os.path.join(deb_dir, "prerm"), 0755) # make executable
 
+	print "building package"
 	os.system("dpkg --build %s ." % base_dir)
+
+	print "done"
 
 if __name__ == "__main__":
 	main()
