@@ -366,17 +366,17 @@ class Inetkey(object):
 
 		menu_options = []
 		menu_options.append(("Toggle FireWall", None, toggle_connection_state))
-		menu_options.append(("Open FireWall", get_icon("green"), lambda e: self.open_firewall()))
-		menu_options.append(("Close FireWall", get_icon("orange"), lambda e: self.close_firewall()))
+		menu_options.append(("Open Firewall", get_icon("green"), lambda e: self.open_firewall()))
+		menu_options.append(("Close Firewall", get_icon("orange"), lambda e: self.close_firewall()))
 		menu_options.append(("-", None, None))
 		if platform.system() in ("Windows", "Microsoft"):
 			menu_options.append(("Close on Workstation Lock", lambda: self.close_on_workstation_locked, toggle_close_on_workstation_locked))
-		menu_options.append(("Change user...", None, change_user))
-		menu_options.append(("Edit config file...", None, lambda e: open_url(config_filename)))
+		menu_options.append(("Change User", None, change_user))
+		menu_options.append(("Edit Config File", None, lambda e: open_url(config_filename)))
 		menu_options.append(("-", None, None))
-		menu_options.append(("User admin page...", None, lambda e: open_url('http://www.sun.ac.za/useradm')))
-		menu_options.append(("Firewall usage...", None, lambda e: open_url('https://maties2.sun.ac.za/fwusage/')))
-		menu_options.append(("IT website...", None, lambda e: open_url('http://it.sun.ac.za/')))
+		menu_options.append(("User Admin", None, lambda e: open_url('http://www.sun.ac.za/useradm')))
+		menu_options.append(("Firewall Usage", None, lambda e: open_url('https://maties2.sun.ac.za/fwusage/')))
+		menu_options.append(("IT Website", None, lambda e: open_url('http://it.sun.ac.za/')))
 		menu_options.append(("-", None, None))
 		self.systrayicon.construct(menu_options, startup=self.startup, on_quit=lambda e: on_quit())
 
@@ -481,10 +481,10 @@ class Inetkey(object):
 		self.firewall_open = connected # set state
 		if connected:
 			self.logger.debug("opened")
-			self.systrayicon.set_icon(get_icon("green"), "connection open")
+			self.systrayicon.set_icon(get_icon("green"), "Connection Open")
 		else:
 			self.logger.debug("closed")
-			self.systrayicon.set_icon(get_icon("orange"), "connection closed")
+			self.systrayicon.set_icon(get_icon("orange"), "Connection Closed")
 
 	def error(self, text):
 		self.logger.error(text)

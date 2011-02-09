@@ -25,21 +25,10 @@ from __future__ import with_statement
 import __init__
 
 import gtk
-try:
-	import egg.trayicon
-except ImportError:
-	message = 'Error loading egg.trayicon. You probably need to run "sudo aptitude install python-eggtrayicon" from a console.'
-	dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR,
-			       gtk.BUTTONS_NONE, message)
-	dialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
-	dialog.run()
-	dialog.destroy()
-	raise Exception(message)
-
 import gobject
 gtk.gdk.threads_init()
 
-class GtkTrayIcon:
+class GtkTrayIcon(gtk.StatusIcon):
 	def button_press_callback(self, widget, event):
 		if event.type == gtk.gdk._2BUTTON_PRESS:
 			self.toggle_function(event)
@@ -48,29 +37,21 @@ class GtkTrayIcon:
 
 	def set_icon(self, icon, hover_text=None):
 		def _set_icon(icon=icon, hover_text=hover_text):
-			self.image.set_from_file(icon)
+			self.set_from_file(icon)
 			#~ print "set", hover_text
 			if hover_text is not None:
-				self.icon.set_tooltip_text(hover_text)
+				self.set_tooltip_text(hover_text)
 		gobject.idle_add(_set_icon)
 
 	def set_hover_text(self, text):
 		#~ print "text", text
-		gobject.idle_add(self.icon.set_tooltip_text, text)
+		gobject.idle_add(self.set_tooltip_text, text)
 
 	def construct(self, menu_options, on_quit=gtk.main_quit, startup=None):
 
 		# creates the tray icon
-		self.icon = egg.trayicon.TrayIcon("inetkey")
-		self.image = gtk.Image()
-		self.image.set_from_file("icons/orange.ico")
-
-		# uses a eventbox cause we cannot attach signals to a gtk.Image
-		self.eventbox = gtk.EventBox()
-		self.eventbox.add(self.image)
-		self.eventbox.connect("button_press_event", self.button_press_callback) # connects the button pressed signal
-		self.icon.add(self.eventbox)
-		self.icon.show_all()
+		self.set_from_file("icons/orange.ico")
+		self.connect("button_press_event", self.button_press_callback) # connects the button pressed signal
 		self.set_hover_text('pynetkey')
 
 		# creates the menu and adds items
@@ -93,6 +74,7 @@ class GtkTrayIcon:
 			startup(self)
 
 		# run the main loop
+		self.set_visible(True)
 		gtk.main()
 
 def password_dialog():
@@ -134,8 +116,10 @@ class PasswordDialog:
 
 		self.userLabel = gtk.Label("Username:")
 		self.userText = gtk.Entry()
+		self.userText.connect("activate", self.callback, self.window)
 		self.passwordLabel = gtk.Label("Password:")
 		self.passwordText = gtk.Entry()
+		self.passwordText.connect("activate", self.callback, self.window)
 		self.passwordText.set_visibility(False)
 		self.connectButton = gtk.Button("Connect")
 
@@ -148,7 +132,7 @@ class PasswordDialog:
 		self.column.pack_start(self.row1, True, True, 0)
 		self.column.pack_start(self.row2, True, True, 0)
 
-		self.connectButton.connect("clicked", self.callback, "'Connect' clicked!")
+		self.connectButton.connect("clicked", self.callback, self.window)
 		self.column.pack_start(self.connectButton, True, True, 0)
 		self.connectButton.show()
 
@@ -163,13 +147,12 @@ class PasswordDialog:
 		self.window.show()
 		gtk.main()
 
-
 if __name__ == '__main__':
 	print password_dialog()
 	menu_options = []
 	base = GtkTrayIcon()
 	menu_options.append(("Quit with icon", "icons/blue.ico", gtk.main_quit))
 	menu_options.append(("-", None, lambda a: None))
-	menu_options.append(("blue", None, lambda a: base.set_icon("icons/blue.ico", "connection")))
-	menu_options.append(("green", None, lambda a: base.set_icon("icons/green.ico", "connection")))
+	menu_options.append(("blue", None, lambda a: base.set_from_file("icons/blue.ico")))
+	menu_options.append(("green", None, lambda a: base.set_from_file("icons/green.ico")))
 	base.construct(menu_options)
