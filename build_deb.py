@@ -54,7 +54,7 @@ Section: web
 Priority: optional
 Architecture: all
 Essential: no
-Depends: python-eggtrayicon, python (>=2.6)
+Depends: python (>=2.6)
 Installed-Size: 150
 Maintainer: Janto Dreijer <jantod@gmail.com>
 Provides: pynetkey
