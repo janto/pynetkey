@@ -110,7 +110,7 @@ rm /usr/bin/pynetkey
 	os.chmod(os.path.join(deb_dir, "prerm"), 0755) # make executable
 
 	print "building package"
-	os.system("dpkg --build %s ." % base_dir)
+	os.system("dpkg --build %s pynetkey.deb" % base_dir)
 
 	print "done"
 

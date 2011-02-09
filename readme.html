@@ -34,49 +34,49 @@ Pynetkey is free software: you can redistribute it and/or modify it under the te
 Pynetkey is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the <a href="http://www.gnu.org/licenses/gpl.html">GNU General Public License</a> for more details.
 </p>
 
-<h2>Windows Installation</h2>
+<h2>Installation</h2>
 
+<h3>Windows Installation</h3>
 <ol>
 <li>download <code>pynetkey.zip</code> from the main site</li>
 <li>extract somewhere and run <code>pynetkey.exe</code></li>
 <li>(optional) create a shortcut to <code>pynetkey.exe</code> (such as on your desktop)</li>
 </ol>
 
-<h3>building from source</h3>
+<h3>Ubuntu Installation</h3>
 
-<p>
-See the Ubuntu section to get the latest sources. Run <code>build.bat</code> to create a distribution file.
-</p>
-
-Build requirements:
-<ul>
-<li>python2.6</li>
-<li>py2exe</li>
-<li>pywin32 (210 works. popup menu icons disappeared for 211,212,213)</li>
-</ul>
-
-<h2>Ubuntu Installation</h2>
+To install the GUI version:
+<ol>
+<li>download <code>pynetkey.deb</code> from the main site</li>
+<li>open it (by for example double clicking) and click on the "Install Package" button</li>
+</ol>
 
 <p>
 The GUI version was developed with an ubuntu/gnome system in mind. A minimal single-file non-gui version is also available as <code>cli.py</code> and should run on most systems with Python2.6. If you have an earlier Python, installing the <a href="http://pypi.python.org/pypi/ssl/">SSL package</a> might work.
 </p>
 
-To install the GUI version:
-<ol>
-<li>Get the source code. There are three ways:
-	<ul>
-	<li>download <code>pynetkey.tar.gz</code> from the main site</li>
-	<li>pull the stable source from a local repository mirror:
-		<pre>hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo pynetkey</pre>
-	</li>
-	<li>pull the bleeding edge sources from the main repository (for this to work you need to be already connected to the internet):
-		<pre>hg clone http://bitbucket.org/janto/pynetkey/</pre>
-	</li>
-	</ul>
+<h2>Development</h2>
+Since the code is GPL, feel free to start hacking at it. If you do something interesting let me know and I might integrate it with my version.
+
+You can get the source from a lof of places:
+<ul>
+<li>download <code>pynetkey.tar.gz</code> from the main site</li>
+<li>If you installed the deb file, you already have the code and Mercurial repository under <code>/usr/share/pyshared/pynetkey/</code></li>
+<li>you can pull the stable source from the local repository mirror:
+	<pre>hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo pynetkey</pre>
 </li>
-<li>run <code>pynetkey.py</code>
-<li>(optional) create a shortcut to <code>pynetkey.py</code> (you can use <code>icons/main.ico</code> as an icon)
-</ol>
+<li>you can pull the bleeding edge sources from the main repository (for this to work you need to be already connected to the internet):
+	<pre>hg clone http://bitbucket.org/janto/pynetkey/</pre>
+</li>
+</ul>
+
+<h3>Windows Build requirements:</h3>
+You can run <code>build.bat</code> to create a distribution file.
+<ul>
+<li>python2.6</li>
+<li>py2exe</li>
+<li>pywin32 (210 works. popup menu icons disappeared for 211,212,213)</li>
+</ul>
 
 <h2>Config File</h2>
 
@@ -161,8 +161,11 @@ open6 = Sat 16:55
 
 <h2>Tips and Tricks</h2>
 <p>
-If you want fully daemon-like behaviour you might be interested in the following command:
-<code>screen -d -m ./cli.py -c ~/.inetkeyrc</code>
+The deb file installs a shortlink to cli.py as <code>/usr/bin/pynetkey</code>. That means you can just type <code>pynetkey</code> into the terminal for quick firewall control.
+</p>
+<p>
+If you want more daemon-like behaviour you might be interested in the following command:
+<code>screen -d -m pynetkey -c ~/.inetkeyrc</code>
 This will create a screen session and immediatly detach it. cli.py will continue to log in and stay connected. You will need to attach the screen with <code>screen -r</code> to log out when you're done.
 </p>
 </body>
