@@ -364,6 +364,21 @@ class Inetkey(object):
 			#~ self.logger.info("close_on_workstation_locked=%s" % self.close_on_workstation_locked)
 			#~ print "close_on_workstation_locked=%s" % self.close_on_workstation_locked
 
+		# catch gnome logout event
+		if platform.system() == "Linux":
+			import gnome
+			import gnome.ui
+			prog = gnome.init("pynetkey-logout", "1.0", gnome.libgnome_module_info_get(), sys.argv, [])
+			client = gnome.ui.master_client()
+			# set up call back for when 'logout'/'shutdown' button pressed
+			def close_firewall_callback(*args):
+				self.close_firewall()
+			def sys_exit_callback(*args):
+				sys.exit()
+			client.connect("die", sys_exit_callback)
+			client.connect("save-yourself", close_firewall_callback)
+			#~ client.connect("shutdown-cancelled", shutdown_cancelled)
+
 		menu_options = []
 		menu_options.append(("Toggle FireWall", None, toggle_connection_state))
 		menu_options.append(("Open Firewall", get_icon("green"), lambda e: self.open_firewall()))
@@ -463,7 +478,7 @@ class Inetkey(object):
 
 	def close_firewall(self):
 		if not self.firewall_open:
-			return
+			return True # True is required by gnome save-yourself event
 		self.info("closing firewall...")
 		try:
 			session_id = self.authenticate()
@@ -473,6 +488,7 @@ class Inetkey(object):
 			self.set_connected_status(connected=False)
 		except ConnectionException, e:
 			self.error(str(e))
+		return True # True is required by gnome save-yourself event
 
 # ---------------
 # display
