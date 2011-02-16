@@ -1,0 +1,6 @@
+include *.py
+include *.html
+include *.txt
+include *.sh
+include *.bat
+recursive-include icons *
