@@ -514,7 +514,11 @@ class Inetkey(object):
 			self.logger.debug(self.run_on_open)
 			try:
 				subprocess_check_output(self.run_on_open, shell=True, stderr=subprocess.STDOUT)
-			except (CalledProcessError, OSError), e:
+			except OSError, e:
+				self.close_firewall()
+				self.error(str(e))
+				return # probably no need to try run_while_open, so just return
+			except CalledProcessError, e:
 				self.close_firewall()
 				self.error("%s. output:\n%s" % (str(e), e.output))
 				return # probably no need to try run_while_open, so just return
@@ -547,8 +551,10 @@ class Inetkey(object):
 			self.logger.debug(self.run_on_close)
 			try:
 				subprocess_check_output(self.run_on_close, shell=True, stderr=subprocess.STDOUT)
-			except (CalledProcessError, OSError), e:
-				self.warn("%s. output:\n%s" % (str(e), e.output))
+			except OSError, e:
+				self.error(str(e))
+			except CalledProcessError, e:
+				self.error("%s. output:\n%s" % (str(e), e.output))
 		return True # True is required by gnome save-yourself event
 
 # ---------------
