@@ -508,10 +508,10 @@ class Inetkey(object):
 			self.set_connected_status(connected=True)
 		except ConnectionException, e:
 			self.error(str(e))
-			return # no need to check run_on_open and run_while_open
+			return # probably no need to check run_on_open and run_while_open if an error occured
 			#~ raise
 		if self.run_on_open:
-			logger.debug(self.run_on_open)
+			self.logger.debug(self.run_on_open)
 			try:
 				subprocess_check_output(self.run_on_open, shell=True, stderr=subprocess.STDOUT)
 			except (CalledProcessError, OSError), e:
@@ -519,7 +519,7 @@ class Inetkey(object):
 				self.error("%s. output:\n%s" % (str(e), e.output))
 				return # probably no need to try run_while_open, so just return
 		if self.run_while_open and not self.run_while_open_subprocess: # avoids respawning subprocess
-			logger.debug(self.run_while_open)
+			self.logger.debug(self.run_while_open)
 			try:
 				self.run_while_open_subprocess = subprocess.Popen(self.run_while_open, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			except (OSError), e:
@@ -544,7 +544,7 @@ class Inetkey(object):
 			self.run_while_open_subprocess.terminate()
 			self.run_while_open_subprocess = None
 		if self.run_on_close:
-			logger.debug(self.run_on_close)
+			self.logger.debug(self.run_on_close)
 			try:
 				subprocess_check_output(self.run_on_close, shell=True, stderr=subprocess.STDOUT)
 			except (CalledProcessError, OSError), e:
@@ -582,7 +582,7 @@ def main():
 		# create application
 		inetkey = Inetkey(username, password)
 		inetkey.run()
-		sys.exit() # makes sure everything is dead. get_usage() might take loooong to timeout.
+		sys.exit() # makes sure everything is dead. get_usage() might take a loooong time to die.
 
 if __name__ == '__main__':
 	try:
@@ -591,4 +591,5 @@ if __name__ == '__main__':
 		pass
 	except: # log any unexpected exceptions
 		traceback.print_exc(file=file(log_filename, "w"))
+		os.chmod(log_filename, stat.S_IRUSR | stat.S_IWUSR) # useless paranoia?
 		raise
