@@ -46,6 +46,7 @@ from time import localtime, strftime, sleep
 
 import os
 import os.path
+import subprocess
 import platform
 import sys
 import traceback
@@ -196,6 +197,9 @@ def get_config_file():
 	conf_obj.set("config", "encoded_password_b32", "")
 	conf_obj.set("config", "open_on_launch", "1")
 	conf_obj.set("config", "connection_hostname", default_connection_hostname)
+	conf_obj.set("config", "autorun_on_open", "")
+	conf_obj.set("config", "autorun_on_close", "")
+	conf_obj.set("config", "autorun_while_open", "")
 	conf_obj.add_section("events")
 
 	# read settings
@@ -216,6 +220,11 @@ def get_config_file():
 	else: # no password provided
 		logger.debug("no password provided in config file")
 		pass
+
+	#handle autorun commands
+	config["autorun_on_open"] = conf_obj.get("config", "autorun_on_open")
+	config["autorun_on_close"] = conf_obj.get("config", "autorun_on_close")
+	config["autorun_while_open"] = conf_obj.get("config", "autorun_while_open")
 
 	# handle scheduled open / close events
 	config["open_times"] = []
@@ -272,6 +281,10 @@ class Inetkey(object):
 		self.username = username
 		self.password = password
 		self.open_on_launch = config["open_on_launch"]
+		self.autorun_on_open = config["autorun_on_open"]
+		self.autorun_on_close = config["autorun_on_close"]
+		self.autorun_while_open = config["autorun_while_open"]
+
 		self.firewall_open = False
 		self.close_on_workstation_locked = False
 
@@ -466,15 +479,34 @@ class Inetkey(object):
 
 	def open_firewall(self):
 		self.info("opening firewall...")
+		self.autorun_while_open_subprocess = None
 		try:
 			session_id = self.authenticate()
 			# open request
 			self.logger.debug("sending 'sign-on' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "1")])
 			self.set_connected_status(connected=True)
-		except ConnectionException, e:
+		except (ConnectionException) as e:
 			self.error(str(e))
+			return
 			#~ raise
+		if self.autorun_on_open:
+			try:
+				subprocess.check_output(self.autorun_on_open,shell=True)
+			except (OSError) as e:
+				self.close_firewall()
+				self.error(str(e))
+				return
+			except (subprocess.CalledProcessError) as e:
+				self.close_firewall()
+				self.error("Error ("+str(e.returncode)+": "+str(e)+") executing '"+self.autorun_on_open+"', output follows:\n"+e.output)
+				return
+		if self.autorun_while_open:
+			try:
+				self.autorun_while_open_subprocess = subprocess.Popen(self.autorun_while_open,shell=True,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+			except (OSError) as e:
+				self.close_firewall()
+				self.error("Error ("+str(self.autorun_while_open_subprocess.returncode)+": "+str(e)+") executing '"+self.autorun_while_open+"', output follows:\n"+self.autorun_while_open_subprocess.stdout.read())
 
 	def close_firewall(self):
 		if not self.firewall_open:
@@ -486,8 +518,21 @@ class Inetkey(object):
 			self.logger.debug("sending 'sign-off' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "2")])
 			self.set_connected_status(connected=False)
-		except ConnectionException, e:
+		except (ConnectionException, OSError) as e:
 			self.error(str(e))
+			return
+		if self.autorun_on_close:
+			try:
+				subprocess.check_output(self.autorun_on_close,shell=True)
+			except (OSError) as e:
+				self.error(str(e))
+				return
+			except (subprocess.CalledProcessError) as e:
+				self.error("Error ("+str(e.returncode)+": "+str(e)+") executing '"+self.autorun_on_open+"', output follows:\n"+e.output)
+				return
+		if self.autorun_while_open_subprocess:
+			self.autorun_while_open_subprocess.terminate()
+			self.autorun_while_open_subprocess = None
 		return True # True is required by gnome save-yourself event
 
 # ---------------
