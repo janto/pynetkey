@@ -151,6 +151,26 @@ def get_icon(name):
 		return filename
 	return icon_color_mapping[name] # try icon in exe
 
+def subprocess_check_output(*popenargs, **kwargs):
+	"""subprocess.check_output is included in stdlib from python2.7. Included here for those using 2.6.
+	Copied from http://svn.python.org/view?view=revision&revision=82075
+	"""
+	if 'stdout' in kwargs:
+		raise ValueError('stdout argument not allowed, it will be overridden.')
+	process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+	output, unused_err = process.communicate()
+	retcode = process.poll()
+	if retcode:
+		cmd = kwargs.get("args")
+		if cmd is None:
+			cmd = popenargs[0]
+		raise CalledProcessError(retcode, cmd, output=output)
+	return output
+class CalledProcessError(subprocess.CalledProcessError):
+	def __init__(self, returncode, cmd, output=None):
+		self.output = output
+		subprocess.CalledProcessError.__init__(self, returncode, cmd)
+
 import ConfigParser
 import base64
 import stat
@@ -197,9 +217,9 @@ def get_config_file():
 	conf_obj.set("config", "encoded_password_b32", "")
 	conf_obj.set("config", "open_on_launch", "1")
 	conf_obj.set("config", "connection_hostname", default_connection_hostname)
-	conf_obj.set("config", "autorun_on_open", "")
-	conf_obj.set("config", "autorun_on_close", "")
-	conf_obj.set("config", "autorun_while_open", "")
+	conf_obj.set("config", "run_on_open", "")
+	conf_obj.set("config", "run_on_close", "")
+	conf_obj.set("config", "run_while_open", "")
 	conf_obj.add_section("events")
 
 	# read settings
@@ -221,10 +241,10 @@ def get_config_file():
 		logger.debug("no password provided in config file")
 		pass
 
-	#handle autorun commands
-	config["autorun_on_open"] = conf_obj.get("config", "autorun_on_open")
-	config["autorun_on_close"] = conf_obj.get("config", "autorun_on_close")
-	config["autorun_while_open"] = conf_obj.get("config", "autorun_while_open")
+	# handle run commands
+	config["run_on_open"] = conf_obj.get("config", "run_on_open")
+	config["run_on_close"] = conf_obj.get("config", "run_on_close")
+	config["run_while_open"] = conf_obj.get("config", "run_while_open")
 
 	# handle scheduled open / close events
 	config["open_times"] = []
@@ -281,12 +301,13 @@ class Inetkey(object):
 		self.username = username
 		self.password = password
 		self.open_on_launch = config["open_on_launch"]
-		self.autorun_on_open = config["autorun_on_open"]
-		self.autorun_on_close = config["autorun_on_close"]
-		self.autorun_while_open = config["autorun_while_open"]
+		self.run_on_open = config["run_on_open"]
+		self.run_on_close = config["run_on_close"]
+		self.run_while_open = config["run_while_open"]
 
 		self.firewall_open = False
 		self.close_on_workstation_locked = False
+		self.run_while_open_subprocess = None
 
 		def refresh():
 			if self.firewall_open:
@@ -479,34 +500,32 @@ class Inetkey(object):
 
 	def open_firewall(self):
 		self.info("opening firewall...")
-		self.autorun_while_open_subprocess = None
 		try:
 			session_id = self.authenticate()
 			# open request
 			self.logger.debug("sending 'sign-on' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "1")])
 			self.set_connected_status(connected=True)
-		except (ConnectionException) as e:
+		except ConnectionException, e:
 			self.error(str(e))
-			return
+			return # no need to check run_on_open and run_while_open
 			#~ raise
-		if self.autorun_on_open:
+		if self.run_on_open:
+			logger.debug(self.run_on_open)
 			try:
-				subprocess.check_output(self.autorun_on_open,shell=True)
-			except (OSError) as e:
+				subprocess_check_output(self.run_on_open, shell=True, stderr=subprocess.STDOUT)
+			except (CalledProcessError, OSError), e:
 				self.close_firewall()
-				self.error(str(e))
-				return
-			except (subprocess.CalledProcessError) as e:
-				self.close_firewall()
-				self.error("Error ("+str(e.returncode)+": "+str(e)+") executing '"+self.autorun_on_open+"', output follows:\n"+e.output)
-				return
-		if self.autorun_while_open:
+				self.error("%s. output:\n%s" % (str(e), e.output))
+				return # probably no need to try run_while_open, so just return
+		if self.run_while_open and not self.run_while_open_subprocess: # avoids respawning subprocess
+			logger.debug(self.run_while_open)
 			try:
-				self.autorun_while_open_subprocess = subprocess.Popen(self.autorun_while_open,shell=True,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-			except (OSError) as e:
+				self.run_while_open_subprocess = subprocess.Popen(self.run_while_open, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			except (OSError), e:
 				self.close_firewall()
-				self.error("Error ("+str(self.autorun_while_open_subprocess.returncode)+": "+str(e)+") executing '"+self.autorun_while_open+"', output follows:\n"+self.autorun_while_open_subprocess.stdout.read())
+				self.error("%s. output:\n%s" % (str(e), self.run_while_open_subprocess.stdout.read()))
+				return
 
 	def close_firewall(self):
 		if not self.firewall_open:
@@ -518,21 +537,18 @@ class Inetkey(object):
 			self.logger.debug("sending 'sign-off' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "2")])
 			self.set_connected_status(connected=False)
-		except (ConnectionException, OSError) as e:
+		except ConnectionException, e:
 			self.error(str(e))
-			return
-		if self.autorun_on_close:
+			# "return" not done here to ensure run_on_close and run_while_open handled correctly
+		if self.run_while_open_subprocess: # done before run_on_close in case there are errors in that command
+			self.run_while_open_subprocess.terminate()
+			self.run_while_open_subprocess = None
+		if self.run_on_close:
+			logger.debug(self.run_on_close)
 			try:
-				subprocess.check_output(self.autorun_on_close,shell=True)
-			except (OSError) as e:
-				self.error(str(e))
-				return
-			except (subprocess.CalledProcessError) as e:
-				self.error("Error ("+str(e.returncode)+": "+str(e)+") executing '"+self.autorun_on_open+"', output follows:\n"+e.output)
-				return
-		if self.autorun_while_open_subprocess:
-			self.autorun_while_open_subprocess.terminate()
-			self.autorun_while_open_subprocess = None
+				subprocess_check_output(self.run_on_close, shell=True, stderr=subprocess.STDOUT)
+			except (CalledProcessError, OSError), e:
+				self.warn("%s. output:\n%s" % (str(e), e.output))
 		return True # True is required by gnome save-yourself event
 
 # ---------------
@@ -552,7 +568,7 @@ class Inetkey(object):
 		self.systrayicon.set_icon(get_icon("red"), text)
 
 	def warn(self, text):
-		self.logger.debug(text)
+		self.logger.warn(text)
 		self.systrayicon.set_icon(get_icon("red"), text)
 
 	def info(self, text):
