@@ -104,6 +104,7 @@ elif platform.system() == "Linux":
 		return False
 	config_filename = os.path.expanduser("~/.inetkeyrc")
 	TEMP_DIRECTORY = "/tmp"
+	terminating = False
 
 else:
 	raise Exception(platform.system()+" not supported")
@@ -372,9 +373,14 @@ class Inetkey(object):
 			client = gnome.ui.master_client()
 			# set up call back for when 'logout'/'shutdown' button pressed
 			def close_firewall_callback(*args):
-				self.close_firewall()
+				global terminating
+				if not terminating:
+					self.close_firewall()
+					terminating = True
+				return True # True is required by gnome save-yourself event
 			def sys_exit_callback(*args):
 				sys.exit()
+				return True # True is required by gnome die event
 			client.connect("die", sys_exit_callback)
 			client.connect("save-yourself", close_firewall_callback)
 			#~ client.connect("shutdown-cancelled", shutdown_cancelled)
@@ -478,7 +484,7 @@ class Inetkey(object):
 
 	def close_firewall(self):
 		if not self.firewall_open:
-			return True # True is required by gnome save-yourself event
+			return
 		self.info("closing firewall...")
 		try:
 			session_id = self.authenticate()
@@ -488,7 +494,7 @@ class Inetkey(object):
 			self.set_connected_status(connected=False)
 		except ConnectionException, e:
 			self.error(str(e))
-		return True # True is required by gnome save-yourself event
+		return True
 
 # ---------------
 # display
