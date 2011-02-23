@@ -61,6 +61,8 @@ logging.root.setLevel(logging.WARN)
 if os.path.exists("debug_flag_file"):
 	logging.root.setLevel(logging.DEBUG)
 
+do_daemon = False
+
 # determine root directory
 root_dir = os.path.abspath(sys.path[0]) # can't use __file__ with py2exe
 if os.path.isfile(root_dir): # py2exe gives library.zip as path[0]
@@ -85,6 +87,7 @@ if platform.system() in ("Windows", "Microsoft"):
 		return not result # no active desktop
 	config_filename = os.path.join(os.environ['HOMEDRIVE'], os.environ['HOMEPATH'], "inetkey.ini") # HOME is unreliable
 	TEMP_DIRECTORY = os.environ['TEMP'] or os.environ['TMP']
+	do_daemon = False #XXX do windows users care?
 
 #~ elif platform.system() == "Linux": #XXX and mac?
 	#~ from wxtrayicon import TrayIcon, password_dialog, gui_quit
@@ -105,6 +108,7 @@ elif platform.system() == "Linux":
 		return False
 	config_filename = os.path.expanduser("~/.inetkeyrc")
 	TEMP_DIRECTORY = "/tmp"
+	do_daemon = True
 
 else:
 	raise Exception(platform.system()+" not supported")
@@ -112,6 +116,9 @@ else:
 # set up paths
 assert os.path.exists(TEMP_DIRECTORY), TEMP_DIRECTORY
 log_filename = os.path.join(TEMP_DIRECTORY, "pynetkey_error.txt")
+
+if do_daemon:
+	from pynetkeyd import DBus_Service
 
 class ReTimer(Thread):
 
@@ -587,6 +594,8 @@ def main():
 	if username and password:
 		# create application
 		inetkey = Inetkey(username, password)
+		if do_daemon:
+			service = DBus_Service(inetkey=inetkey)
 		inetkey.run()
 		sys.exit() # makes sure everything is dead. get_usage() might take a loooong time to die.
 
