@@ -477,7 +477,7 @@ class Inetkey(object):
 
 	def authenticate(self):
 		# get sesion ID
-		logger.debug("connecting")
+		self.logger.debug("connecting")
 		try:
 			response = self.make_request()
 		except (ssl.SSLError, socket.error), e:
