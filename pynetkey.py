@@ -120,7 +120,7 @@ log_filename = os.path.join(TEMP_DIRECTORY, "pynetkey_error.txt")
 if do_daemon:
 	try:
 		from pynetkeyd import DBus_Service
-	except ImportError
+	except ImportError:
 		do_daemon = False #XXX is dbus installed by default?
 
 class ReTimer(Thread):
