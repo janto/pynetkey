@@ -55,7 +55,7 @@ Priority: optional
 Architecture: all
 Essential: no
 Depends: python (>=2.6)
-Installed-Size: 150
+Installed-Size: 200
 Maintainer: Janto Dreijer <jantod@gmail.com>
 Provides: pynetkey
 Description: Unofficial GPL alternative to inetkey/sinetkey.
@@ -103,7 +103,7 @@ ln --symbolic /usr/share/pyshared/pynetkey/cli.py /usr/bin/pynetkey-cli
 	os.chmod(os.path.join(deb_dir, "postinst"), 0755) # make executable
 
 	with file(os.path.join(deb_dir, "prerm"), "w") as f:
-				f.write("""
+		f.write("""
 #!/bin/sh
 rm /usr/bin/pynetkey-cli
 """.lstrip())
@@ -111,6 +111,10 @@ rm /usr/bin/pynetkey-cli
 
 	print "building package"
 	os.system("dpkg --build %s pynetkey.deb" % base_dir)
+
+	print "building index"
+	# http://www.debian.org/doc/manuals/repository-howto/repository-howto.en.html
+	os.system("dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz")
 
 	print "done"
 
