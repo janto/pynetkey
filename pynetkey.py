@@ -118,7 +118,10 @@ assert os.path.exists(TEMP_DIRECTORY), TEMP_DIRECTORY
 log_filename = os.path.join(TEMP_DIRECTORY, "pynetkey_error.txt")
 
 if do_daemon:
-	from pynetkeyd import DBus_Service
+	try:
+		from pynetkeyd import DBus_Service
+	except ImportError
+		do_daemon = False #XXX is dbus installed by default?
 
 class ReTimer(Thread):
 
@@ -153,6 +156,9 @@ class ConnectionException(Exception):
 icon_color_mapping = dict(blue=101, green=102, orange=103, red=104, yellow=105)
 
 def get_icon(name):
+	filename = os.path.abspath(os.path.join(root_dir, "icons/%s.svg" % name))
+	if os.path.exists(filename):
+		return filename
 	filename = os.path.abspath(os.path.join(root_dir, "icons/%s.ico" % name))
 	if os.path.exists(filename):
 		return filename
