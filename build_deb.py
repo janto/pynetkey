@@ -14,6 +14,8 @@ def main():
 	except OSError:
 		pass
 
+	print
+
 	print "pulling from dip.sun.ac.za"
 	install_dir = os.path.join(base_dir, "usr/share/pyshared/pynetkey")
 	try:
@@ -21,6 +23,8 @@ def main():
 	except OSError:
 		pass
 	os.system("hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo %s" % install_dir)
+
+	print
 
 	print "creating files."
 	shortcut_dir = os.path.join(base_dir, "usr/share/applications")
@@ -59,11 +63,16 @@ Installed-Size: 200
 Maintainer: Janto Dreijer <jantod@gmail.com>
 Provides: pynetkey
 Description: Unofficial GPL alternative to inetkey/sinetkey.
-	Its goals are to be more robust and provide some extra functionality.
+ Goals are to be more robust and provide some extra functionality.
 """.lstrip() % dict(version=version)
 	with file(os.path.join(deb_dir, "control"), "w") as f:
 		f.write(control_text)
 
+	doc_dir = os.path.join(base_dir, "usr/share/doc/pynetkey")
+	try:
+		os.makedirs(doc_dir)
+	except OSError:
+		pass
 	copyright_text = """
 Upstream Author(s):
 
@@ -92,7 +101,7 @@ On Debian systems, the complete text of the GNU General
 Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 
 """.lstrip()
-	with file(os.path.join(deb_dir, "copyright"), "w") as f:
+	with file(os.path.join(doc_dir, "copyright"), "w") as f:
 		f.write(copyright_text)
 
 	with file(os.path.join(deb_dir, "postinst"), "w") as f:
@@ -109,12 +118,23 @@ rm /usr/bin/pynetkey-cli
 """.lstrip())
 	os.chmod(os.path.join(deb_dir, "prerm"), 0755) # make executable
 
+	print
+
 	print "building package"
-	os.system("dpkg --build %s pynetkey.deb" % base_dir)
+	os.system("fakeroot dpkg --build %s pynetkey.deb" % base_dir)
+
+	print
+
+	print "checking package"
+	os.system("lintian pynetkey.deb")
+
+	print
 
 	print "building index"
 	# http://www.debian.org/doc/manuals/repository-howto/repository-howto.en.html
 	os.system("dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz")
+
+	print
 
 	print "done"
 
