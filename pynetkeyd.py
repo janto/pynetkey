@@ -27,6 +27,7 @@ import dbus.glib
 
 import os
 import sys
+import time
 
 bus_name = "za.ac.sun.pynetkey"
 object_path = "/za/ac/sun/pynetkey/system"
@@ -79,7 +80,27 @@ def run_client():
 		return
 	service = dbus.Interface(proxy, bus_name)
 
-	if "open" in sys.argv[1:]:
+	if "start" in sys.argv[1:]:
+		pass
+	elif "stop" in sys.argv[1:]:
+		pass
+	elif "wait_until_started" in sys.argv[1:]
+		pass
+	elif ("wait_until_open" in sys.argv[1:]) or ("wait_until_closed" in sys.argv[1:]):
+		status_to_wait_for = dict(wait_until_open="open", wait_until_closed="closed")["wait_until_open"]
+		interval = 1
+		timeout = None # in minutes
+		status = None
+		start_time = time.time()
+		while 1:
+			status = service.status()
+			if status == status_to_wait_for:
+				break
+			if timeout is not None and timeout*60 < abs(time.time() - start_time): # take abs to handle system time change
+				break
+			time.sleep(interval)
+		print status
+	elif "open" in sys.argv[1:]:
 		service.open()
 	elif "close" in sys.argv[1:]:
 		service.close()
