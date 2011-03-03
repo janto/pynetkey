@@ -536,13 +536,22 @@ class Inetkey(object):
 				self.error("%s. output:\n%s" % (str(e), e.output))
 				return # probably no need to try run_while_open, so just return
 		if self.run_while_open and not self.run_while_open_subprocess: # avoids respawning subprocess
-			self.logger.debug(self.run_while_open)
-			try:
-				self.run_while_open_subprocess = subprocess.Popen(self.run_while_open, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-			except (OSError), e:
-				self.close_firewall()
-				self.error("%s. output:\n%s" % (str(e), self.run_while_open_subprocess.stdout.read()))
-				return
+			def runner(self=self):
+				self.logger.debug(self.run_while_open)
+				try:
+					self.run_while_open_subprocess = subprocess.Popen(self.run_while_open, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				except (OSError), e:
+					self.close_firewall()
+					self.error("%s. output:\n%s" % (str(e), self.run_while_open_subprocess.stdout.read()))
+					return
+				self.run_while_open_subprocess.wait()
+				error_text = self.run_while_open_subprocess.stderr.read()
+				if error_text.strip():
+					self.error("run_while_open output:\n%s" % error_text.rstrip())
+					return
+				self.logger.debug("run_while_open exited")
+			self._runner = Thread(target=runner) #XXX have to save it somewhere
+			self._runner.start()
 
 	def close_firewall(self):
 		if not self.firewall_open:
