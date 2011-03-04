@@ -539,16 +539,20 @@ class Inetkey(object):
 			def runner(self=self):
 				self.logger.debug(self.run_while_open)
 				try:
-					self.run_while_open_subprocess = subprocess.Popen(self.run_while_open, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+					run_while_open_subprocess = subprocess.Popen(self.run_while_open, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+					self.run_while_open_subprocess = run_while_open_subprocess
 				except (OSError), e:
 					self.close_firewall()
 					self.error("%s. output:\n%s" % (str(e), self.run_while_open_subprocess.stdout.read()))
 					return
-				self.run_while_open_subprocess.wait()
-				error_text = self.run_while_open_subprocess.stderr.read()
+				run_while_open_subprocess.wait()
+				self.run_while_open_subprocess = None
+				error_text = run_while_open_subprocess.stderr.read()
 				if error_text.strip():
+					# exited with error
 					self.error("run_while_open output:\n%s" % error_text.rstrip())
 					return
+				# exited without error
 				self.logger.debug("run_while_open exited")
 			self._runner = Thread(target=runner) #XXX have to save it somewhere
 			self._runner.start()
