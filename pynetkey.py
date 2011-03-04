@@ -601,6 +601,18 @@ class Inetkey(object):
 	def error(self, text):
 		self.logger.error(text)
 		self.systrayicon.set_icon(get_icon("red"), text)
+		try:
+			import pynotify
+		except ImportError:
+			pass
+		else:
+			if pynotify.init("Pynetkey"):
+				n = pynotify.Notification("Pynetkey error", text)
+				pynotify.Notification.set_property(n, "icon-name", get_icon("red"))
+				n.set_urgency(pynotify.URGENCY_CRITICAL)
+				n.show()
+			else:
+				self.logger.error("error with pynotify.init")
 
 	def warn(self, text):
 		self.logger.warn(text)
