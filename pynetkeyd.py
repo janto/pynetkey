@@ -84,7 +84,7 @@ def run_client():
 		pass
 	elif "stop" in sys.argv[1:]:
 		pass
-	elif "wait_until_started" in sys.argv[1:]
+	elif "wait_until_started" in sys.argv[1:]:
 		pass
 	elif ("wait_until_open" in sys.argv[1:]) or ("wait_until_closed" in sys.argv[1:]):
 		status_to_wait_for = dict(wait_until_open="open", wait_until_closed="closed")["wait_until_open"]

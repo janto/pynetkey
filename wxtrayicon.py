@@ -123,7 +123,7 @@ class TrayIcon(object):
 
 	def __init__(self):
 		self.app = None
-		self.filename = "icons/normal.ico"
+		self.filename = "icons/main.ico"
 
 	def construct(self, menu_options=None, startup=None, on_quit=None):
 		app = wx.App(0)

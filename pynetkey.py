@@ -519,7 +519,7 @@ class Inetkey(object):
 			self.logger.debug("sending 'sign-on' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "1")])
 			self.set_connected_status(connected=True)
-		except ConnectionException, e:
+		except (ConnectionException, socket.gaierror), e:
 			self.error(str(e))
 			return # probably no need to check run_on_open and run_while_open if an error occured
 			#~ raise
@@ -563,11 +563,14 @@ class Inetkey(object):
 			self.logger.debug("sending 'sign-off' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "2")])
 			self.set_connected_status(connected=False)
-		except ConnectionException, e:
+		except (ConnectionException, socket.gaierror), e:
 			self.error(str(e))
 			# "return" not done here to ensure run_on_close and run_while_open handled correctly
 		if self.run_while_open_subprocess: # done before run_on_close in case there are errors in that command
-			self.run_while_open_subprocess.terminate()
+			try:
+				self.run_while_open_subprocess.terminate()
+			except OSError:
+				pass # probably already terminated
 			self.run_while_open_subprocess = None
 		if self.run_on_close:
 			self.logger.debug(self.run_on_close)
