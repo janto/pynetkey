@@ -61,17 +61,20 @@ logging.root.setLevel(logging.WARN)
 if os.path.exists("debug_flag_file"):
 	logging.root.setLevel(logging.DEBUG)
 
-do_daemon = False
-
 # determine root directory
+running_from_exe = False
 root_dir = os.path.abspath(sys.path[0]) # can't use __file__ with py2exe
 if os.path.isfile(root_dir): # py2exe gives library.zip as path[0]
+	running_from_exe = True
 	root_dir = os.path.dirname(root_dir)
 assert os.path.exists(os.path.join(root_dir, "icons")), root_dir
 
 # load platform specific gui code
 
-if platform.system() in ("Windows", "Microsoft"):
+running_on_windows = platform.system() in ("Windows", "Microsoft")
+running_on_linux = platform.system() == "Linux"
+
+if running_on_windows:
 	from systrayicon import password_dialog, TrayIcon, gui_quit
 	#~ from wxtrayicon import TrayIcon, password_dialog, gui_quit
 	import win32api
@@ -87,7 +90,6 @@ if platform.system() in ("Windows", "Microsoft"):
 		return not result # no active desktop
 	config_filename = os.path.join(os.environ['HOMEDRIVE'], os.environ['HOMEPATH'], "inetkey.ini") # HOME is unreliable
 	TEMP_DIRECTORY = os.environ['TEMP'] or os.environ['TMP']
-	do_daemon = False #XXX do windows users care?
 
 #~ elif platform.system() == "Linux": #XXX and mac?
 	#~ from wxtrayicon import TrayIcon, password_dialog, gui_quit
@@ -98,7 +100,7 @@ if platform.system() in ("Windows", "Microsoft"):
 	#~ config_filename = os.path.expanduser("~/.inetkeyrc")
 	#~ TEMP_DIRECTORY = "/tmp"
 
-elif platform.system() == "Linux":
+elif running_on_linux:
 	from gtktrayicon import password_dialog
 	from gtktrayicon import GtkTrayIcon as TrayIcon
 	from gtk import main_quit as gui_quit
@@ -108,7 +110,6 @@ elif platform.system() == "Linux":
 		return False
 	config_filename = os.path.expanduser("~/.inetkeyrc")
 	TEMP_DIRECTORY = "/tmp"
-	do_daemon = True
 
 else:
 	raise Exception(platform.system()+" not supported")
@@ -117,6 +118,8 @@ else:
 assert os.path.exists(TEMP_DIRECTORY), TEMP_DIRECTORY
 log_filename = os.path.join(TEMP_DIRECTORY, "pynetkey_error.txt")
 
+# decide if we can create a daemon interface
+do_daemon = running_on_linux
 if do_daemon:
 	try:
 		from pynetkeyd import DBus_Service
@@ -153,16 +156,20 @@ class ConnectionException(Exception):
 	pass
 
 # icon positions in compiled exe
+#XXX why do we need this if there is an icons directory?
 icon_color_mapping = dict(blue=101, green=102, orange=103, red=104, yellow=105)
 
 def get_icon(name):
-	filename = os.path.abspath(os.path.join(root_dir, "icons/%s.svg" % name))
-	if os.path.exists(filename):
-		return filename
+	if running_on_linux: # try svg
+		filename = os.path.abspath(os.path.join(root_dir, "icons/%s.svg" % name))
+		if os.path.exists(filename):
+			return filename
 	filename = os.path.abspath(os.path.join(root_dir, "icons/%s.ico" % name))
 	if os.path.exists(filename):
 		return filename
-	return icon_color_mapping[name] # try icon in exe
+	if running_from_exe:
+		return icon_color_mapping[name] # try icon in exe
+	return None # no icon
 
 def subprocess_check_output(*popenargs, **kwargs):
 	"""subprocess.check_output is included in stdlib from python2.7. Included here for those using 2.6.
@@ -412,7 +419,7 @@ class Inetkey(object):
 			#~ print "close_on_workstation_locked=%s" % self.close_on_workstation_locked
 
 		# catch gnome logout event
-		if platform.system() == "Linux":
+		if running_on_linux:
 			import gnome
 			import gnome.ui
 			prog = gnome.init("pynetkey-logout", "1.0", gnome.libgnome_module_info_get(), sys.argv, [])
@@ -519,7 +526,7 @@ class Inetkey(object):
 			self.logger.debug("sending 'sign-on' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "1")])
 			self.set_connected_status(connected=True)
-		except (ConnectionException, socket.gaierror), e:
+		except (ConnectionException, socket.error), e:
 			self.error(str(e))
 			return # probably no need to check run_on_open and run_while_open if an error occured
 			#~ raise
@@ -567,7 +574,7 @@ class Inetkey(object):
 			self.logger.debug("sending 'sign-off' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "2")])
 			self.set_connected_status(connected=False)
-		except (ConnectionException, socket.gaierror), e:
+		except (ConnectionException, socket.error), e:
 			self.error(str(e))
 			# "return" not done here to ensure run_on_close and run_while_open handled correctly
 		if self.run_while_open_subprocess: # done before run_on_close in case there are errors in that command
