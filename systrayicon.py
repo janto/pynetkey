@@ -232,7 +232,7 @@ class SysTrayIcon(object):
 		win32gui.SelectObject(hdcBitmap, hbmOld)
 		win32gui.DeleteDC(hdcBitmap)
 
-		return hbm
+		return hbm.Detach()
 
 	def command(self, hwnd, msg, wparam, lparam):
 		id = win32gui.LOWORD(wparam)
