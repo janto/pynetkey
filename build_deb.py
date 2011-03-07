@@ -16,13 +16,19 @@ def main():
 
 	print
 
-	print "pulling from dip.sun.ac.za"
+	print "cloning mercurial repo"
 	install_dir = os.path.join(base_dir, "usr/share/pyshared/pynetkey")
 	try:
 		os.makedirs(install_dir)
 	except OSError:
 		pass
-	os.system("hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo %s" % install_dir)
+	os.system("hg clone . %s" % install_dir)
+	hgrc_text = """
+[paths]
+default = static-http://dip.sun.ac.za/~janto/pynetkey/repo
+""".lstrip()
+	with file(os.path.join(install_dir, ".hg/hgrc"), "w") as f:
+		f.write(hgrc_text)
 
 	print
 
