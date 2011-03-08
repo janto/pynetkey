@@ -46,7 +46,7 @@ Comment=Inetkey in Python
 Exec=python /usr/share/pyshared/pynetkey/pynetkey.py
 Terminal=false
 Type=Application
-Icon=/usr/share/pyshared/pynetkey/icons/main.png
+Icon=/usr/share/pyshared/pynetkey/icons/orange.svg
 Categories=Network;
 """.lstrip()
 	with file(os.path.join(shortcut_dir, "pynetkey.desktop"), "w") as f:
