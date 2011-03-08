@@ -110,19 +110,12 @@ Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 	with file(os.path.join(doc_dir, "copyright"), "w") as f:
 		f.write(copyright_text)
 
-	with file(os.path.join(deb_dir, "postinst"), "w") as f:
-		f.write("""
-#!/bin/sh
-ln --symbolic /usr/share/pyshared/pynetkey/cli.py /usr/bin/pynetkey-cli
-""".lstrip())
-	os.chmod(os.path.join(deb_dir, "postinst"), 0755) # make executable
-
-	with file(os.path.join(deb_dir, "prerm"), "w") as f:
-		f.write("""
-#!/bin/sh
-rm /usr/bin/pynetkey-cli
-""".lstrip())
-	os.chmod(os.path.join(deb_dir, "prerm"), 0755) # make executable
+	usr_bin_dir = os.path.join(base_dir, "usr/bin")
+	try:
+		os.makedirs(usr_bin_dir)
+	except OSError:
+		pass
+	os.system("ln --symbolic /usr/share/pyshared/pynetkey/cli.py %s/pynetkey-cli" % usr_bin_dir)
 
 	print
 
