@@ -339,7 +339,7 @@ class Inetkey(object):
 				self.open_firewall()
 		self.refresher = ReTimer(refresh_frequency, refresh)
 
-		def check_usage():
+		def check_usage(self=self):
 			if not self.firewall_open:
 				return
 			self.logger.debug("querying usage")
@@ -347,10 +347,10 @@ class Inetkey(object):
 				usage = get_usage(self.username, self.password)
 				self.logger.debug("usage query result: %s" % `usage`)
 				if usage is not None:
-					self.systrayicon.set_hover_text("R%s = %s MB" % usage)
+					self.report_usage("R%s = %s MB" % usage)
 			except Exception, e:
 				#~ raise
-				self.systrayicon.set_hover_text("error checking usage: "+str(e))
+				self.report_usage("error checking usage: "+str(e))
 		self.usage_checker = ReTimer(usage_query_frequency, check_usage, immediate=True)
 
 		# scheduler
@@ -374,6 +374,7 @@ class Inetkey(object):
 
 		self.retimer_check_schedule = ReTimer(check_schedule_frequency, check_schedule, immediate=True)
 
+		self.hint_text = ["", ""] # [firewall_message, usage_message] #XXX should I use a lock when modifying?
 		self.systrayicon = TrayIcon()
 
 # ---------------
@@ -600,14 +601,18 @@ class Inetkey(object):
 		self.firewall_open = connected # set state
 		if connected:
 			self.logger.debug("opened")
-			self.systrayicon.set_icon(get_icon("green"), "Connection Open")
+			self.hint_text[0] = "Connection Open"
+			self.systrayicon.set_icon(get_icon("green"), "\n".join(self.hint_text).strip())
 		else:
 			self.logger.debug("closed")
-			self.systrayicon.set_icon(get_icon("orange"), "Connection Closed")
+			self.hint_text[0] = "Connection Closed"
+			self.hint_text[1] = ""
+			self.systrayicon.set_icon(get_icon("orange"), "\n".join(self.hint_text).strip())
 
 	def error(self, text):
 		self.logger.error(text)
-		self.systrayicon.set_icon(get_icon("red"), text)
+		self.hint_text[0] = text
+		self.systrayicon.set_icon(get_icon("red"), "\n".join(self.hint_text).strip())
 		try:
 			import pynotify
 		except ImportError:
@@ -627,7 +632,12 @@ class Inetkey(object):
 
 	def info(self, text):
 		self.logger.info(text)
-		self.systrayicon.set_icon(get_icon("yellow"), text)
+		self.hint_text[0] = text
+		self.systrayicon.set_icon(get_icon("yellow"), "\n".join(self.hint_text).strip())
+
+	def report_usage(self, text):
+		self.hint_text[1] = text
+		self.systrayicon.set_hover_text(text="\n".join(self.hint_text).strip())
 
 def main():
 	# get password and username
