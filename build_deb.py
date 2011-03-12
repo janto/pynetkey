@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 
+"""
+this script could probably work as bash script, but I hate bash scripts. http://mywiki.wooledge.org/BashPitfalls
+"""
+
 from __future__ import with_statement
 from __init__ import version
 import os
 import shutil
+
+def write_to_file(filename, text):
+	with file(filename, "w") as f:
+		f.write(text)
 
 def main():
 	data_dir = os.path.abspath(".")
@@ -18,27 +26,19 @@ def main():
 
 	print "cloning mercurial repo"
 	install_dir = os.path.join(base_dir, "usr/share/pyshared/pynetkey")
-	try:
-		os.makedirs(install_dir)
-	except OSError:
-		pass
+	os.makedirs(install_dir)
 	os.system("hg clone . %s" % install_dir)
-	hgrc_text = """
+	write_to_file(os.path.join(install_dir, ".hg/hgrc"), """
 [paths]
 default = static-http://dip.sun.ac.za/~janto/pynetkey/repo
-""".lstrip()
-	with file(os.path.join(install_dir, ".hg/hgrc"), "w") as f:
-		f.write(hgrc_text)
+""".lstrip())
 
 	print
 
 	print "creating files."
 	shortcut_dir = os.path.join(base_dir, "usr/share/applications")
-	try:
-		os.makedirs(shortcut_dir)
-	except OSError:
-		pass
-	shortcut_text = """
+	os.makedirs(shortcut_dir)
+	write_to_file(os.path.join(shortcut_dir, "pynetkey.desktop"), """
 [Desktop Entry]
 Version=1.0
 Name=Pynetkey
@@ -48,16 +48,11 @@ Terminal=false
 Type=Application
 Icon=/usr/share/pyshared/pynetkey/icons/orange.svg
 Categories=Network;
-""".lstrip()
-	with file(os.path.join(shortcut_dir, "pynetkey.desktop"), "w") as f:
-		f.write(shortcut_text)
+""".lstrip())
 
 	deb_dir = os.path.join(base_dir, "DEBIAN")
-	try:
-		os.makedirs(deb_dir)
-	except OSError:
-		pass
-	control_text = """
+	os.makedirs(deb_dir)
+	write_to_file(os.path.join(deb_dir, "control"), """
 Package: pynetkey
 Version: %(version)s
 Section: web
@@ -70,16 +65,11 @@ Maintainer: Janto Dreijer <jantod@gmail.com>
 Provides: pynetkey
 Description: Unofficial GPL alternative to inetkey/sinetkey.
  Goals are to be more robust and provide some extra functionality.
-""".lstrip() % dict(version=version)
-	with file(os.path.join(deb_dir, "control"), "w") as f:
-		f.write(control_text)
+""".lstrip() % dict(version=version))
 
 	doc_dir = os.path.join(base_dir, "usr/share/doc/pynetkey")
-	try:
-		os.makedirs(doc_dir)
-	except OSError:
-		pass
-	copyright_text = """
+	os.makedirs(doc_dir)
+	write_to_file(os.path.join(doc_dir, "copyright"), """
 Upstream Author(s):
 
     Janto Dreijer <jantod@gmail.com>
@@ -106,15 +96,10 @@ License:
 On Debian systems, the complete text of the GNU General
 Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 
-""".lstrip()
-	with file(os.path.join(doc_dir, "copyright"), "w") as f:
-		f.write(copyright_text)
+""".lstrip())
 
 	usr_bin_dir = os.path.join(base_dir, "usr/bin")
-	try:
-		os.makedirs(usr_bin_dir)
-	except OSError:
-		pass
+	os.makedirs(usr_bin_dir)
 	os.system("ln --symbolic /usr/share/pyshared/pynetkey/cli.py %s/pynetkey-cli" % usr_bin_dir)
 
 	print
