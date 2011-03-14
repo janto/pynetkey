@@ -26,6 +26,7 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
+More minor error handling - Janto (Mar 2011)
 Minor error handling - Janto (Sep 2010)
 Firewall changed to TLS - Janto (Jun 2010)
 Add some informative messages - Janto (Apr 2010)
@@ -41,7 +42,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20100925"
+version = "pynetkey cli 20110314"
 connection_hostname = "fw.sun.ac.za"
 connection_port = 950
 
@@ -118,50 +119,50 @@ class Inetkey(object):
 		logger.warn("Pynetkey does not currently authenticate the server certificate")
 
 	def make_request(self, variables=[]):
-		# python's urllib sucks. easier to do things directly with sockets
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		ssl_sock = ssl.wrap_socket(s,
-			#~ ca_certs="/etc/ca_certs_file",
-			cert_reqs=ssl.CERT_NONE,
-			#~ cert_reqs=ssl.CERT_REQUIRED,
-			#~ ssl_version=ssl.PROTOCOL_SSLv3,
-			ssl_version=ssl.PROTOCOL_TLSv1,
-		)
-		ssl_sock.connect((connection_hostname, connection_port))
+		try:
+			# python's urllib sucks. easier to do things directly with sockets
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			ssl_sock = ssl.wrap_socket(s,
+				#~ ca_certs="/etc/ca_certs_file",
+				cert_reqs=ssl.CERT_NONE,
+				#~ cert_reqs=ssl.CERT_REQUIRED,
+				#~ ssl_version=ssl.PROTOCOL_SSLv3,
+				ssl_version=ssl.PROTOCOL_TLSv1,
+			)
+			ssl_sock.connect((connection_hostname, connection_port))
 
-		#~ print repr(ssl_sock.getpeername())
-		#~ print ssl_sock.cipher()
-		#~ print pprint.pformat(ssl_sock.getpeercert())
+			#~ print repr(ssl_sock.getpeername())
+			#~ print ssl_sock.cipher()
+			#~ print pprint.pformat(ssl_sock.getpeercert())
 
-		encoded_variables = urllib.urlencode(variables)
-		request = "\r\n".join([
-			"POST / HTTP/1.1" if variables else "GET / HTTP/1.1",
-			"Host: %s" % connection_hostname,
-			"User-Agent: %s" % version,
-			"Content-Length: %d" % len(encoded_variables),
-			"Referer: https://%s:%d/" % (connection_hostname, connection_port),
-			"",
-			encoded_variables,
-		])
-		#~ print request
-		#~ print
-		ssl_sock.write(request)
+			encoded_variables = urllib.urlencode(variables)
+			request = "\r\n".join([
+				"POST / HTTP/1.1" if variables else "GET / HTTP/1.1",
+				"Host: %s" % connection_hostname,
+				"User-Agent: %s" % version,
+				"Content-Length: %d" % len(encoded_variables),
+				"Referer: https://%s:%d/" % (connection_hostname, connection_port),
+				"",
+				encoded_variables,
+			])
+			#~ print request
+			#~ print
+			ssl_sock.write(request)
 
-		# Read a chunk of data.  Will not necessarily read all the data returned by the server.
-		response = ssl_sock.read()
-		#~ print response
+			# Read a chunk of data.  Will not necessarily read all the data returned by the server.
+			response = ssl_sock.read()
+			#~ print response
 
-		# note that closing the SSLSocket will also close the underlying socket
-		ssl_sock.close()
+			# note that closing the SSLSocket will also close the underlying socket
+			ssl_sock.close()
 
-		return response
+			return response
+		except (ssl.SSLError, socket.error), e:
+			raise ConnectionException(e)
+		raise ConnectionException(str("error connecting"))
 
 	def authenticate(self):
 		# get sesion ID
-		try:
-			response = self.make_request()
-		except (ssl.SSLError, socket.error), e:
-			raise ConnectionException(e)
 		response = self.make_request()
 		session_id = re.findall('<input type="hidden" name="ID" value="(.*)"', response)[0]
 		# send username

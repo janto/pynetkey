@@ -454,55 +454,54 @@ class Inetkey(object):
 # networking
 
 	def make_request(self, variables=[]):
-		e = "error connecting"
-		for retry in range(connection_retries): #XXX technically unused
-			# python's urllib sucks. easier to do things directly with sockets
-			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			ssl_sock = ssl.wrap_socket(s,
-				#~ ca_certs="/etc/ca_certs_file",
-				cert_reqs=ssl.CERT_NONE,
-				#~ cert_reqs=ssl.CERT_REQUIRED,
-				#~ ssl_version=ssl.PROTOCOL_SSLv3,
-				ssl_version=ssl.PROTOCOL_TLSv1,
-			)
-			ssl_sock.connect((self.connection_hostname, connection_port))
+		try:
+			for retry in range(connection_retries): #XXX technically unused
+				# python's urllib sucks. easier to do things directly with sockets
+				s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+				ssl_sock = ssl.wrap_socket(s,
+					#~ ca_certs="/etc/ca_certs_file",
+					cert_reqs=ssl.CERT_NONE,
+					#~ cert_reqs=ssl.CERT_REQUIRED,
+					#~ ssl_version=ssl.PROTOCOL_SSLv3,
+					ssl_version=ssl.PROTOCOL_TLSv1,
+				)
+				ssl_sock.connect((self.connection_hostname, connection_port))
 
-			#~ print repr(ssl_sock.getpeername())
-			#~ print ssl_sock.cipher()
-			#~ print pprint.pformat(ssl_sock.getpeercert())
+				#~ print repr(ssl_sock.getpeername())
+				#~ print ssl_sock.cipher()
+				#~ print pprint.pformat(ssl_sock.getpeercert())
 
-			encoded_variables = urllib.urlencode(variables)
-			request = "\r\n".join([
-				"POST / HTTP/1.1" if variables else "GET / HTTP/1.1",
-				"Host: %s" % self.connection_hostname,
-				"User-Agent: %s" % version,
-				"Content-Length: %d" % len(encoded_variables),
-				"Referer: https://%s:%d/" % (self.connection_hostname, connection_port),
-				"",
-				encoded_variables,
-			])
-			#~ print request
-			#~ print
-			ssl_sock.write(request)
+				encoded_variables = urllib.urlencode(variables)
+				request = "\r\n".join([
+					"POST / HTTP/1.1" if variables else "GET / HTTP/1.1",
+					"Host: %s" % self.connection_hostname,
+					"User-Agent: %s" % version,
+					"Content-Length: %d" % len(encoded_variables),
+					"Referer: https://%s:%d/" % (self.connection_hostname, connection_port),
+					"",
+					encoded_variables,
+				])
+				#~ print request
+				#~ print
+				ssl_sock.write(request)
 
-			# Read a chunk of data.  Will not necessarily read all the data returned by the server.
-			response = ssl_sock.read()
-			#~ print response
+				# Read a chunk of data.  Will not necessarily read all the data returned by the server.
+				response = ssl_sock.read()
+				#~ print response
 
-			# note that closing the SSLSocket will also close the underlying socket
-			ssl_sock.close()
+				# note that closing the SSLSocket will also close the underlying socket
+				ssl_sock.close()
 
-			# break from retry loop
-			return response
-		raise ConnectionException(str(e))
+				# break from retry loop
+				return response
+		except (ssl.SSLError, socket.error), e:
+			raise ConnectionException(e)
+		raise ConnectionException(str("error connecting"))
 
 	def authenticate(self):
 		# get sesion ID
 		self.logger.debug("connecting")
-		try:
-			response = self.make_request()
-		except (ssl.SSLError, socket.error), e:
-			raise ConnectionException(e)
+		response = self.make_request()
 		session_id = re.findall('<input type="hidden" name="ID" value="(.*)"', response)[0]
 		# send username
 		self.logger.debug("sending username")
@@ -527,7 +526,7 @@ class Inetkey(object):
 			self.logger.debug("sending 'sign-on' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "1")])
 			self.set_connected_status(connected=True)
-		except (ConnectionException, socket.error), e:
+		except (ConnectionException), e:
 			self.error(str(e))
 			return # probably no need to check run_on_open and run_while_open if an error occured
 			#~ raise
@@ -575,7 +574,7 @@ class Inetkey(object):
 			self.logger.debug("sending 'sign-off' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "2")])
 			self.set_connected_status(connected=False)
-		except (ConnectionException, socket.error), e:
+		except (ConnectionException), e:
 			self.error(str(e))
 			# "return" not done here to ensure run_on_close and run_while_open handled correctly
 		if self.run_while_open_subprocess: # done before run_on_close in case there are errors in that command
