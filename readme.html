@@ -39,7 +39,7 @@ If you need help, email me (Janto Dreijer) at jantod@gmail.com
 <h3>Ubuntu Installation</h3>
 
 <p>
-To install the GUI version you can add the following line to your <code>/ets/apt/sources.list</code>:<br />
+To install the GUI version you can add the following line to your <code>/etc/apt/sources.list</code>:<br />
 <code>deb http://dip.sun.ac.za/~janto/pynetkey /</code><br />
 and then install the <code>pynetkey</code> package.
 </p>
@@ -178,7 +178,7 @@ The deb file installs a shortlink to cli.py as <code>/usr/bin/pynetkey-cli</code
 </p>
 <p>
 If you want more daemon-like behaviour you might be interested in the following command:
-<code>screen -d -m pynetkey -c ~/.inetkeyrc</code>
+<code>screen -d -m pynetkey-cli -c ~/.inetkeyrc</code>
 This will create a screen session and immediatly detach it. cli.py will continue to log in and stay connected. You will need to attach the screen with <code>screen -r</code> to log out when you're done.
 </p>
 </body>
