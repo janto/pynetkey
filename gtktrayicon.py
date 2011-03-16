@@ -28,6 +28,8 @@ import gtk
 import gobject
 gtk.gdk.threads_init()
 
+#XXX theres quite a few threading issues here
+
 class GtkTrayIcon(gtk.StatusIcon):
 	def button_press_callback(self, widget, event):
 		if event.type == gtk.gdk._2BUTTON_PRESS:
@@ -37,17 +39,28 @@ class GtkTrayIcon(gtk.StatusIcon):
 
 	def set_icon(self, icon, hover_text=None):
 		def _set_icon(icon=icon, hover_text=hover_text):
+			#~ print "set_icon", icon, hover_text
 			self.set_from_file(icon)
 			#~ print "set", hover_text
 			if hover_text is not None:
 				self.set_tooltip_text(hover_text)
+		#~ gtk.gdk.threads_enter()
 		gobject.idle_add(_set_icon)
+		#~ while gtk.events_pending(): # give gui time to update icon
+			#~ gtk.main_iteration()
+		#~ gtk.gdk.threads_leave()
 
 	def set_hover_text(self, text):
 		#~ print "text", text
+		#~ gtk.gdk.threads_enter()
 		gobject.idle_add(self.set_tooltip_text, text)
+		#~ gtk.gdk.threads_leave()
+		#~ while gtk.events_pending(): # give gui time to update icon
+		#~ gtk.main_iteration()
 
 	def construct(self, menu_options, on_quit=gtk.main_quit, startup=None):
+
+		gtk.gdk.threads_enter()
 
 		# creates the tray icon
 		self.set_from_file("icons/orange.ico")
@@ -70,11 +83,18 @@ class GtkTrayIcon(gtk.StatusIcon):
 			item.show()
 			self.menu.append(item)
 
+		self.set_visible(True)
+
+		gtk.gdk.threads_leave()
+
+		while gtk.events_pending(): # give gui time to update icon
+			gtk.main_iteration()
+
 		if startup:
 			startup(self)
+			#~ gobject.idle_add(startup, self)
 
 		# run the main loop
-		self.set_visible(True)
 		gtk.main()
 
 def password_dialog():
