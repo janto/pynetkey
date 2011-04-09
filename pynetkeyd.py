@@ -29,6 +29,8 @@ import os
 import sys
 import time
 
+from optparse import OptionParser
+
 bus_name = "za.ac.sun.pynetkey"
 object_path = "/za/ac/sun/pynetkey/system"
 
@@ -77,7 +79,25 @@ def service_pid():
 
 def run_client():
 
-	if "kill" in sys.argv[1:]:
+	# parse arguments
+	parser = OptionParser()
+	parser.add_option("--start", action="store_true", dest="start", default=False, help="start a Pynetkey process")
+	parser.add_option("--stop", action="store_true", dest="stop", default=False, help="stop all Pynetkey processes")
+	parser.add_option("--kill", action="store_true", dest="kill", default=False, help="kill all Pynetkey processes")
+
+	parser.add_option("--open", action="store_true", dest="open", default=False, help="open firewall")
+	parser.add_option("--close", action="store_true", dest="close", default=False, help="close firewall")
+
+	parser.add_option("--wait_until_open", action="store_true", dest="wait_until_open", default=False, help="block until firewall open")
+	parser.add_option("--wait_until_closed", action="store_true", dest="wait_until_closed", default=False, help="block until firewall closed")
+
+	parser.add_option("--pid", action="store_true", dest="pid", default=False, help="print process ID to stdout")
+	parser.add_option("--status", action="store_true", dest="status", default=False, help="print firewall status to stdout")
+	parser.add_option("--user", action="store_true", dest="user", default=False, help="print current user to stdout")
+
+	options, args = parser.parse_args()
+
+	if options.kill:
 		os.system("pkill -9 -f pynetkey.py")
 		return
 
@@ -89,7 +109,7 @@ def run_client():
 	else:
 		service = dbus.Interface(proxy, bus_name)
 
-	if "start" in sys.argv[1:]:
+	if options.start:
 		if service:
 			print "pynetkey already started"
 			return
@@ -100,10 +120,11 @@ def run_client():
 		return
 
 	if not service:
-		print "pynetkey not started"
+		print "pynetkey not started. try 'pynetkey --start'"
+		parser.print_help()
 		return
 
-	if "stop" in sys.argv[1:]:
+	if options.stop:
 		pid = service.pid()
 		print "stopping process %d" % pid
 		try:
@@ -113,9 +134,9 @@ def run_client():
 			#~ cmd = "pkill -9 -f pynetkey.py"
 			print "keyboard interrupt. running %s" % str(cmd)
 			os.system(cmd)
-	elif "wait_until_started" in sys.argv[1:]:
+	elif options.wait_until_started:
 		pass
-	elif ("wait_until_open" in sys.argv[1:]) or ("wait_until_closed" in sys.argv[1:]):
+	elif options.wait_until_open or options.wait_until_closed:
 		status_to_wait_for = dict(wait_until_open="open", wait_until_closed="closed")["wait_until_open"]
 		interval = 1
 		timeout = None # in minutes
@@ -129,18 +150,19 @@ def run_client():
 				break
 			time.sleep(interval)
 		print status
-	elif "open" in sys.argv[1:]:
+	elif options.open:
 		service.open()
-	elif "close" in sys.argv[1:]:
+	elif options.close:
 		service.close()
-	elif "pid" in sys.argv[1:]: # output must be clean to allow usage by other scripts
+	elif options.pid: # output must be clean to allow usage by other scripts
 		print service.pid()
-	elif "status" in sys.argv[1:]: # output must be clean to allow usage by other scripts
+	elif options.status: # output must be clean to allow usage by other scripts
 		print service.status()
-	elif "user" in sys.argv[1:]: # output must be clean to allow usage by other scripts
+	elif options.user: # output must be clean to allow usage by other scripts
 		print service.user()
 	else:
 		print "nothing to do"
+		parser.print_help()
 
 if __name__ == "__main__":
 	run_client()
