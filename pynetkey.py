@@ -122,9 +122,16 @@ log_filename = os.path.join(TEMP_DIRECTORY, "pynetkey_error.txt")
 do_daemon = running_on_linux
 if do_daemon:
 	try:
-		from pynetkeyd import DBus_Service
+		from pynetkeyd import DBus_Service, service_pid
 	except ImportError:
 		do_daemon = False #XXX is dbus installed by default?
+
+if do_daemon:
+	pid = service_pid()
+	if pid is not None: # already running a pynetkey
+		cmd = "kill -9 %d" % pid
+		logger.warn("found another pynetkey process. killing it with '%s'" % cmd)
+		os.system(cmd)
 
 class ReTimer(Thread):
 
@@ -390,10 +397,13 @@ class Inetkey(object):
 		self.retimer_check_schedule.start()
 
 	def shutdown(self):
-		self.refresher.stop()
-		self.usage_checker.stop()
-		self.retimer_check_schedule.stop()
-		self.close_firewall()
+		try:
+			self.refresher.stop()
+			self.usage_checker.stop()
+			self.retimer_check_schedule.stop()
+			self.close_firewall()
+		finally:
+			gui_quit()
 
 	def run(self):
 		# create system tray menu
@@ -403,11 +413,8 @@ class Inetkey(object):
 			else:
 				self.open_firewall()
 		def on_quit(hwnd=0, msg=0, wparam=0, lparam=0):
-			try:
-				self.shutdown()
-			finally:
-				gui_quit()
-				return 1
+			self.shutdown()
+			return 1
 		def change_user(event):
 			username, password = prompt_username_password(force_prompt=True)
 			if username and password:

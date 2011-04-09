@@ -50,6 +50,10 @@ class DBus_Service(dbus.service.Object):
 	def pid(self):
 		return os.getpid()
 
+	@dbus.service.method(dbus_interface=bus_name)
+	def stop(self):
+		self.inetkey.shutdown()
+
 	@dbus.service.method(dbus_interface=bus_name, out_signature='s')
 	def status(self):
 		return "open" if self.inetkey.firewall_open else "closed"
@@ -72,18 +76,43 @@ def service_pid():
 	return service.pid()
 
 def run_client():
+
+	if "kill" in sys.argv[1:]:
+		os.system("pkill -9 -f pynetkey.py")
+		return
+
 	bus = dbus.SessionBus()
 	try:
 		proxy = bus.get_object(bus_name, object_path)
 	except dbus.exceptions.DBusException:
-		print "pynetkey not started"
-		return
-	service = dbus.Interface(proxy, bus_name)
+		service = None
+	else:
+		service = dbus.Interface(proxy, bus_name)
 
 	if "start" in sys.argv[1:]:
-		pass
-	elif "stop" in sys.argv[1:]:
-		pass
+		if service:
+			print "pynetkey already started"
+			return
+		pid = os.fork() #XXX not completely correct
+		print "pid", pid
+		if pid == 0:
+			os.system(r"./pynetkey.py &> \dev\null")
+		return
+
+	if not service:
+		print "pynetkey not started"
+		return
+
+	if "stop" in sys.argv[1:]:
+		pid = service.pid()
+		print "stopping process %d" % pid
+		try:
+			service.stop()
+		except KeyboardInterrupt:
+			cmd = "kill -9 %d" % pid
+			#~ cmd = "pkill -9 -f pynetkey.py"
+			print "keyboard interrupt. running %s" % str(cmd)
+			os.system(cmd)
 	elif "wait_until_started" in sys.argv[1:]:
 		pass
 	elif ("wait_until_open" in sys.argv[1:]) or ("wait_until_closed" in sys.argv[1:]):
@@ -104,11 +133,11 @@ def run_client():
 		service.open()
 	elif "close" in sys.argv[1:]:
 		service.close()
-	elif "pid" in sys.argv[1:]:
+	elif "pid" in sys.argv[1:]: # output must be clean to allow usage by other scripts
 		print service.pid()
-	elif "status" in sys.argv[1:]:
+	elif "status" in sys.argv[1:]: # output must be clean to allow usage by other scripts
 		print service.status()
-	elif "user" in sys.argv[1:]:
+	elif "user" in sys.argv[1:]: # output must be clean to allow usage by other scripts
 		print service.user()
 	else:
 		print "nothing to do"
