@@ -29,7 +29,7 @@ check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing
 default_connection_hostname = "fw.sun.ac.za"
 connection_port = 950
 connection_timeout = 15
-connection_retries = 3
+connection_retries = 3 #XXX technically unused
 
 import locale
 locale.setlocale(locale.LC_ALL, 'C') # necessary for scheduler to match days of week consistently
@@ -382,6 +382,7 @@ class Inetkey(object):
 		self.retimer_check_schedule = ReTimer(check_schedule_frequency, check_schedule, immediate=True)
 
 		self.hint_text = ["", ""] # [firewall_message, usage_message] #XXX should I use a lock when modifying?
+		self.prev_pynotify_message = None
 		self.systrayicon = TrayIcon()
 
 # ---------------
@@ -604,6 +605,7 @@ class Inetkey(object):
 # display
 
 	def set_connected_status(self, connected=True):
+		self.prev_pynotify_message = None
 		self.firewall_open = connected # set state
 		if connected:
 			self.logger.debug("opened")
@@ -619,18 +621,20 @@ class Inetkey(object):
 		self.logger.error(text)
 		self.hint_text[0] = text
 		self.systrayicon.set_icon(get_icon("red"), "\n".join(self.hint_text).strip())
-		try:
-			import pynotify
-		except ImportError:
-			pass
-		else:
-			if pynotify.init("Pynetkey"):
-				n = pynotify.Notification("Pynetkey error", text)
-				pynotify.Notification.set_property(n, "icon-name", get_icon("red"))
-				n.set_urgency(pynotify.URGENCY_CRITICAL)
-				n.show()
+		if self.prev_pynotify_message != text: # only if message changed. avoids repeatedly notifying user with same message
+			try:
+				import pynotify
+			except ImportError:
+				pass
 			else:
-				self.logger.error("error with pynotify.init")
+				if pynotify.init("Pynetkey"):
+					n = pynotify.Notification("Pynetkey error", text)
+					pynotify.Notification.set_property(n, "icon-name", get_icon("red"))
+					n.set_urgency(pynotify.URGENCY_CRITICAL)
+					n.show()
+					self.prev_pynotify_message = text
+				else:
+					self.logger.error("error with pynotify.init")
 
 	def warn(self, text):
 		self.logger.warn(text)
