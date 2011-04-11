@@ -29,7 +29,7 @@ import os
 import sys
 import time
 
-from optparse import OptionParser
+import optparse
 
 bus_name = "za.ac.sun.pynetkey"
 object_path = "/za/ac/sun/pynetkey/system"
@@ -80,20 +80,26 @@ def service_pid():
 def run_client():
 
 	# parse arguments
-	parser = OptionParser()
-	parser.add_option("--start", action="store_true", dest="start", default=False, help="start a Pynetkey process")
-	parser.add_option("--stop", action="store_true", dest="stop", default=False, help="stop all Pynetkey processes")
-	parser.add_option("--kill", action="store_true", dest="kill", default=False, help="kill all Pynetkey processes")
-
+	parser = optparse.OptionParser(usage="pynetkey [options]")
 	parser.add_option("--open", action="store_true", dest="open", default=False, help="open firewall")
 	parser.add_option("--close", action="store_true", dest="close", default=False, help="close firewall")
 
-	parser.add_option("--wait_until_open", action="store_true", dest="wait_until_open", default=False, help="block until firewall open")
-	parser.add_option("--wait_until_closed", action="store_true", dest="wait_until_closed", default=False, help="block until firewall closed")
+	parser.add_option("--start", action="store_true", dest="start", default=False, help="start a Pynetkey process")
+	parser.add_option("--stop", action="store_true", dest="stop", default=False, help="stop all Pynetkey processes")
+	parser.add_option("--kill", action="store_true", dest="kill", default=False, help="kill all Pynetkey processes (pkill -9 -f pynetkey.py)")
 
-	parser.add_option("--pid", action="store_true", dest="pid", default=False, help="print process ID to stdout")
-	parser.add_option("--status", action="store_true", dest="status", default=False, help="print firewall status to stdout")
-	parser.add_option("--user", action="store_true", dest="user", default=False, help="print current user to stdout")
+	group = optparse.OptionGroup(parser, "Wait options", "will block until true")
+	group.add_option("--wait_until_open", action="store_true", dest="wait_until_open", default=False, help="block until firewall open")
+	group.add_option("--wait_until_closed", action="store_true", dest="wait_until_closed", default=False, help="block until firewall closed")
+	group.add_option("--wait_until_started", action="store_true", dest="wait_until_started", default=False, help="block until pynetkey started")
+	group.add_option("--wait_until_stopped", action="store_true", dest="wait_until_stopped", default=False, help="block until pynetkey stopped")
+	parser.add_option_group(group)
+
+	group = optparse.OptionGroup(parser, "Query options", "print status to stdout")
+	group.add_option("--pid", action="store_true", dest="pid", default=False, help="print process ID to stdout")
+	group.add_option("--status", action="store_true", dest="status", default=False, help="print firewall status to stdout")
+	group.add_option("--user", action="store_true", dest="user", default=False, help="print current user to stdout")
+	parser.add_option_group(group)
 
 	options, args = parser.parse_args()
 
@@ -135,6 +141,8 @@ def run_client():
 			print "keyboard interrupt. running %s" % str(cmd)
 			os.system(cmd)
 	elif options.wait_until_started:
+		pass
+	elif options.wait_until_stopped:
 		pass
 	elif options.wait_until_open or options.wait_until_closed:
 		status_to_wait_for = dict(wait_until_open="open", wait_until_closed="closed")["wait_until_open"]
