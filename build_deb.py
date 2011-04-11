@@ -62,7 +62,6 @@ Essential: no
 Depends: python (>=2.6)
 Installed-Size: 200
 Maintainer: Janto Dreijer <jantod@gmail.com>
-Provides: pynetkey
 Description: Unofficial GPL alternative to inetkey/sinetkey.
  Goals are to be more robust and provide some extra functionality.
 """.lstrip() % dict(version=version))
@@ -101,6 +100,7 @@ Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 	usr_bin_dir = os.path.join(base_dir, "usr/bin")
 	os.makedirs(usr_bin_dir)
 	os.system("ln --symbolic /usr/share/pyshared/pynetkey/cli.py %s/pynetkey-cli" % usr_bin_dir)
+	os.system("ln --symbolic /usr/share/pyshared/pynetkey/pynetkeyd.sh %s/pynetkey" % usr_bin_dir)
 
 	print
 
