@@ -242,18 +242,20 @@ def get_config_file():
 	conf_obj.set("config", "username", "")
 	conf_obj.set("config", "password", "")
 	conf_obj.set("config", "encoded_password_b32", "")
-	conf_obj.set("config", "open_on_launch", "1")
 	conf_obj.set("config", "connection_hostname", default_connection_hostname)
+	conf_obj.set("config", "notify_on_error", "1")
+	conf_obj.set("config", "open_on_launch", "1")
 	conf_obj.set("config", "run_on_open", "")
 	conf_obj.set("config", "run_on_close", "")
 	conf_obj.set("config", "run_while_open", "")
 	conf_obj.add_section("events")
 
-	# read settings
+	# read settings from file
 	conf_obj.read(config_filename)
 	config = dict()
 	config["username"] = conf_obj.get("config", "username")
-	config["open_on_launch"] = conf_obj.get("config", "open_on_launch") == "1"
+	config["open_on_launch"] = conf_obj.get("config", "open_on_launch") == "1" # convert to boolean
+	config["notify_on_error"] = conf_obj.get("config", "notify_on_error") == "1" # convert to boolean
 	config["connection_hostname"] = conf_obj.get("config", "connection_hostname")
 
 	# handle password
@@ -322,6 +324,7 @@ class Inetkey(object):
 	def __init__(self, username, password):
 
 		config = get_config_file()
+		self.config = config
 
 		self.logger = logging.getLogger("Inetkey")
 		self.connection_hostname = config["connection_hostname"]
@@ -621,7 +624,7 @@ class Inetkey(object):
 		self.logger.error(text)
 		self.hint_text[0] = text
 		self.systrayicon.set_icon(get_icon("red"), "\n".join(self.hint_text).strip())
-		if self.prev_pynotify_message != text: # only if message changed. avoids repeatedly notifying user with same message
+		if self.config["notify_on_error"] and self.prev_pynotify_message != text: # only if message changed. avoids repeatedly notifying user with same message
 			try:
 				import pynotify
 			except ImportError:
