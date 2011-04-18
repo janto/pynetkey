@@ -169,7 +169,8 @@ def run_client():
 	elif options.user: # output must be clean to allow usage by other scripts
 		print service.user()
 	else:
-		print "nothing to do"
+		print "\nWarning! Experimental functionality!\nMost of these don't work yet.\n"
+		#~ print "nothing to do"
 		parser.print_help()
 
 if __name__ == "__main__":
