@@ -60,7 +60,7 @@ class GtkTrayIcon(gtk.StatusIcon):
 
 	def construct(self, menu_options, on_quit=gtk.main_quit, startup=None):
 
-		gtk.gdk.threads_enter()
+		#~ gtk.gdk.threads_enter()
 
 		# creates the tray icon
 		self.set_from_file("icons/orange.ico")
@@ -85,7 +85,7 @@ class GtkTrayIcon(gtk.StatusIcon):
 
 		self.set_visible(True)
 
-		gtk.gdk.threads_leave()
+		#~ gtk.gdk.threads_leave()
 
 		while gtk.events_pending(): # give gui time to update icon
 			gtk.main_iteration()
