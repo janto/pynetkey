@@ -126,6 +126,10 @@ if do_daemon:
 	except ImportError:
 		do_daemon = False #XXX is dbus installed by default?
 
+if len(sys.argv) > 1:
+	print "pynetkey.py does not accept any arguments. You probably want pynetkey-cli"
+	sys.exit(1)
+
 if do_daemon:
 	pid = service_pid()
 	if pid is not None: # already running a pynetkey
