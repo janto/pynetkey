@@ -77,6 +77,8 @@ def service_pid():
 	service = dbus.Interface(proxy, bus_name)
 	return service.pid()
 
+pkill_command = 'pkill -9 -f "python.+pynetkey.py"'
+
 def run_client():
 
 	# parse arguments
@@ -84,27 +86,28 @@ def run_client():
 	parser.add_option("--open", action="store_true", dest="open", default=False, help="open firewall")
 	parser.add_option("--close", action="store_true", dest="close", default=False, help="close firewall")
 
-	parser.add_option("--start", action="store_true", dest="start", default=False, help="start a Pynetkey process")
+	#~ parser.add_option("--start", action="store_true", dest="start", default=False, help="start a Pynetkey process")
 	parser.add_option("--stop", action="store_true", dest="stop", default=False, help="stop all Pynetkey processes")
-	parser.add_option("--kill", action="store_true", dest="kill", default=False, help="kill all Pynetkey processes (pkill -9 -f pynetkey.py)")
+	parser.add_option("--kill", action="store_true", dest="kill", default=False, help="kill all Pynetkey processes (%s)" % pkill_command)
 
-	group = optparse.OptionGroup(parser, "Wait options", "will block until true")
-	group.add_option("--wait_until_open", action="store_true", dest="wait_until_open", default=False, help="block until firewall open")
-	group.add_option("--wait_until_closed", action="store_true", dest="wait_until_closed", default=False, help="block until firewall closed")
-	group.add_option("--wait_until_started", action="store_true", dest="wait_until_started", default=False, help="block until pynetkey started")
-	group.add_option("--wait_until_stopped", action="store_true", dest="wait_until_stopped", default=False, help="block until pynetkey stopped")
-	parser.add_option_group(group)
+	#~ group = optparse.OptionGroup(parser, "Wait options", "will block until true")
+	#~ group.add_option("--wait_until_open", action="store_true", dest="wait_until_open", default=False, help="block until firewall open")
+	#~ group.add_option("--wait_until_closed", action="store_true", dest="wait_until_closed", default=False, help="block until firewall closed")
+	#~ group.add_option("--wait_until_started", action="store_true", dest="wait_until_started", default=False, help="block until pynetkey started")
+	#~ group.add_option("--wait_until_stopped", action="store_true", dest="wait_until_stopped", default=False, help="block until pynetkey stopped")
+	#~ parser.add_option_group(group)
 
 	group = optparse.OptionGroup(parser, "Query options", "print status to stdout")
 	group.add_option("--pid", action="store_true", dest="pid", default=False, help="print process ID to stdout")
 	group.add_option("--status", action="store_true", dest="status", default=False, help="print firewall status to stdout")
+	#~ group.add_option("--usage", action="store_true", dest="usage", default=False, help="print current user's usage to stdout")
 	group.add_option("--user", action="store_true", dest="user", default=False, help="print current user to stdout")
 	parser.add_option_group(group)
 
 	options, args = parser.parse_args()
 
 	if options.kill:
-		os.system("pkill -9 -f pynetkey.py")
+		os.system(pkill_command)
 		return
 
 	bus = dbus.SessionBus()
@@ -115,49 +118,46 @@ def run_client():
 	else:
 		service = dbus.Interface(proxy, bus_name)
 
-	if options.start:
-		if service:
-			print "pynetkey already started"
-			return
-		pid = os.fork() #XXX not completely correct
-		print "pid", pid
-		if pid == 0:
-			os.system(r"./pynetkey.py &> \dev\null")
-		return
+	#~ if options.start:
+		#~ if service:
+			#~ print "pynetkey already started"
+			#~ return
+		#~ pid = os.fork() #XXX not completely correct
+		#~ print "pid", pid
+		#~ if pid == 0:
+			#~ os.system(r"./pynetkey.py &> \dev\null")
+		#~ return
 
 	if not service:
-		print "pynetkey not started. try 'pynetkey --start'"
+		print "pynetkey not started."
 		parser.print_help()
 		return
 
 	if options.stop:
-		pid = service.pid()
-		print "stopping process %d" % pid
+		print "closing firewall and stopping pynetkey process. ctrl-c will kill pynetkey process."
 		try:
 			service.stop()
 		except KeyboardInterrupt:
-			cmd = "kill -9 %d" % pid
-			#~ cmd = "pkill -9 -f pynetkey.py"
-			print "keyboard interrupt. running %s" % str(cmd)
-			os.system(cmd)
-	elif options.wait_until_started:
-		pass
-	elif options.wait_until_stopped:
-		pass
-	elif options.wait_until_open or options.wait_until_closed:
-		status_to_wait_for = dict(wait_until_open="open", wait_until_closed="closed")["wait_until_open"]
-		interval = 1
-		timeout = None # in minutes
-		status = None
-		start_time = time.time()
-		while 1:
-			status = service.status()
-			if status == status_to_wait_for:
-				break
-			if timeout is not None and timeout*60 < abs(time.time() - start_time): # take abs to handle system time change
-				break
-			time.sleep(interval)
-		print status
+			print "keyboard interrupt. running %s" % str(pkill_command)
+			os.system(pkill_command)
+	#~ elif options.wait_until_started:
+		#~ pass
+	#~ elif options.wait_until_stopped:
+		#~ pass
+	#~ elif options.wait_until_open or options.wait_until_closed:
+		#~ status_to_wait_for = dict(wait_until_open="open", wait_until_closed="closed")["wait_until_open"]
+		#~ interval = 1
+		#~ timeout = None # in minutes
+		#~ status = None # in seconds
+		#~ start_time = time.time()
+		#~ while 1:
+			#~ status = service.status()
+			#~ if status == status_to_wait_for:
+				#~ break
+			#~ if timeout is not None and timeout*60 < abs(time.time() - start_time): # take abs to handle system time change
+				#~ break
+			#~ time.sleep(interval)
+		#~ print status
 	elif options.open:
 		service.open()
 	elif options.close:
@@ -169,7 +169,6 @@ def run_client():
 	elif options.user: # output must be clean to allow usage by other scripts
 		print service.user()
 	else:
-		print "\nWarning! Experimental functionality!\nMost of these don't work yet.\n"
 		#~ print "nothing to do"
 		parser.print_help()
 
