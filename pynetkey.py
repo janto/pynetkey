@@ -126,9 +126,10 @@ if do_daemon:
 	except ImportError:
 		do_daemon = False #XXX is dbus installed by default?
 
-if len(sys.argv) > 1:
-	print "pynetkey.py does not accept any arguments. You probably want pynetkey-cli"
-	sys.exit(1)
+if __name__ == "__main__":
+	if len(sys.argv) > 1:
+		print "pynetkey.py does not accept any arguments. You probably want pynetkey-cli"
+		sys.exit(1)
 
 if do_daemon:
 	pid = service_pid()
@@ -171,7 +172,7 @@ class AccessDeniedException(Exception):
 
 # icon positions in compiled exe
 #XXX why do we need this if there is an icons directory?
-icon_color_mapping = dict(blue=101, green=102, orange=103, red=104, yellow=105)
+icon_color_mapping = dict(green=102, orange=103, red=104, yellow=105)
 
 def get_icon(name):
 	if running_on_linux: # try svg

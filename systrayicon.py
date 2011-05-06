@@ -146,8 +146,8 @@ class SysTrayIcon(object):
 		self.icon = filename
 		self.refresh_icon()
 
-	def set_hover_text(self, hover_text):
-		self.hover_text = hover_text
+	def set_hover_text(self, text):
+		self.hover_text = text
 		self.refresh_icon()
 
 	def restart(self, hwnd, msg, wparam, lparam):
