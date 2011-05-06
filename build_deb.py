@@ -63,7 +63,7 @@ Depends: python (>=2.6)
 Installed-Size: 200
 Maintainer: Janto Dreijer <jantod@gmail.com>
 Description: Unofficial GPL alternative to inetkey/sinetkey.
- Goals are to be more robust and provide some extra functionality.
+ Pynetkey's primary goals are to be more robust and provide some extra functionality compared to nxinetkey.
 """.lstrip() % dict(version=version))
 
 	doc_dir = os.path.join(base_dir, "usr/share/doc/pynetkey")
