@@ -166,6 +166,9 @@ class ReTimer(Thread):
 class ConnectionException(Exception):
 	pass
 
+class AccessDeniedException(Exception):
+	pass
+
 # icon positions in compiled exe
 #XXX why do we need this if there is an icons directory?
 icon_color_mapping = dict(blue=101, green=102, orange=103, red=104, yellow=105)
@@ -303,11 +306,24 @@ def prompt_username_password(force_prompt=False):
 			return config["username"], config["password"]
 	return password_dialog()
 
-def get_usage(username, password):
+def get_usage(username, password, _enabled=[True]):
+	if not _enabled[0]:
+		logger.debug("get_usage was disabled")
+		return None
+
 	url = "https://maties2.sun.ac.za/fwusage/"
 
 	class FancyURLopener(urllib.FancyURLopener):
-		def prompt_user_passwd(self, a, b):
+		def prompt_user_passwd(self, a, b, _tries=[0]):
+			# will be called again if password is wrong
+			# FancyURLopener does not respect its maxtries property for all HTTP 40x messages.
+			# fix for later versions of python:
+			# http://hg.python.org/cpython/rev/46356267ce8f/
+			# Issue1368368 - prompt_user_passwd() in FancyURLopener masks 401 Unauthorized error page
+			# so we hack it
+			_tries[0] += 1
+			if 1 < _tries[0]: # don't auto retry incorrect password
+				raise AccessDeniedException()
 			return username, password
 
 	opener = FancyURLopener(proxies={}) # no proxy
@@ -315,6 +331,11 @@ def get_usage(username, password):
 		result = opener.open(url, data=urllib.urlencode([("client", version)])) # maybe IT will one day want to block a specific version?
 	except RuntimeError: #maximum recursion depth exceeded
 		#XXX why this sometimes happens is beyond me
+		logger.debug("max recursion depth")
+		return None
+	except AccessDeniedException: # password probably changed while pynetkey had firewall open
+		logger.debug("get_usage returned authentication failure. will not retry until pynetkey restart")
+		_enabled[0] = False # until next restart, just return None
 		return None
 	data = result.read()
 
@@ -363,7 +384,7 @@ class Inetkey(object):
 				if usage is not None:
 					self.report_usage("R%s = %s MB" % usage)
 			except Exception, e:
-				#~ raise
+				raise
 				self.report_usage("error checking usage: "+str(e))
 		self.usage_checker = ReTimer(usage_query_frequency, check_usage, immediate=True)
 
@@ -528,7 +549,7 @@ class Inetkey(object):
 		response = self.make_request([('ID', session_id), ('STATE', "2"), ('DATA', self.password)])
 		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
 		if "denied" in response:
-			raise ConnectionException(stripped_response)
+			raise AccessDeniedException(stripped_response)
 		else:
 			self.logger.info(stripped_response)
 		return session_id
@@ -541,6 +562,10 @@ class Inetkey(object):
 			self.logger.debug("sending 'sign-on' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "1")])
 			self.set_connected_status(connected=True)
+		except (AccessDeniedException), e:
+			self.set_connected_status(connected=False) # do not retry open
+			self.error(str(e))
+			return # probably no need to check run_on_open and run_while_open if an error occured
 		except (ConnectionException), e:
 			self.error(str(e))
 			return # probably no need to check run_on_open and run_while_open if an error occured
@@ -589,6 +614,10 @@ class Inetkey(object):
 			self.logger.debug("sending 'sign-off' request")
 			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "2")])
 			self.set_connected_status(connected=False)
+		except (AccessDeniedException), e:
+			self.set_connected_status(connected=False) # do not retry close, just assume it's ok not to close XXX valid assumption?
+			self.error(str(e))
+			# "return" not done here to ensure run_on_close and run_while_open handled correctly
 		except (ConnectionException), e:
 			self.error(str(e))
 			# "return" not done here to ensure run_on_close and run_while_open handled correctly
