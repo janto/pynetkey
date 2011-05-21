@@ -14,7 +14,7 @@ bus_name = "za.ac.sun.pynetkey"
 object_path = "/za/ac/sun/pynetkey/system"
 
 def get_icon(name):
-	return None
+	return "/usr/share/pixmaps/%s.svg" % name
 
 def change_user():
 	pass
@@ -56,6 +56,7 @@ def main():
 		("Firewall Usage", None, lambda e: open_url('https://maties2.sun.ac.za/fwusage/')),
 		("IT Website", None, lambda e: open_url('http://it.sun.ac.za/')),
 		("-", None, None),
+		("Quit", None, None),
 		]:
 
 		menu_items = gtk.MenuItem(title)
@@ -79,7 +80,7 @@ def main():
 				if status == "open":
 					ind.set_icon("pynetkey-open")
 				elif status == "closed":
-					ind.set_icon("pynetkey-main")
+					ind.set_icon("pynetkey-closed")
 				else:
 					assert False, status
 			except dbus.DBusException:

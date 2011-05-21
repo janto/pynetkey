@@ -330,6 +330,9 @@ def get_usage(username, password, _enabled=[True]):
 	opener = FancyURLopener(proxies={}) # no proxy
 	try:
 		result = opener.open(url, data=urllib.urlencode([("client", version)])) # maybe IT will one day want to block a specific version?
+	except IOError, e: # sometimes: The read operation timed out
+		logger.debug(str(e))
+		return None
 	except RuntimeError: #maximum recursion depth exceeded
 		#XXX why this sometimes happens is beyond me
 		logger.debug("max recursion depth")
