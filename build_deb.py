@@ -105,12 +105,12 @@ Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 	print
 
 	print "building package"
-	os.system("fakeroot dpkg --build %s pynetkey.deb" % base_dir)
+	os.system("fakeroot dpkg --build %s pynetkey%s.deb" % (base_dir, version))
 
 	print
 
 	print "checking package"
-	os.system("lintian pynetkey.deb")
+	os.system("lintian pynetkey%s.deb" % version)
 
 	print
 
