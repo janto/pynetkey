@@ -71,9 +71,8 @@ Pynetkey is distributed in the hope that it will be useful, but WITHOUT ANY WARR
 <h2>Development</h2>
 Since the code is GPL, feel free to start hacking at it. If you do something interesting let me know and I might integrate it with my version.
 
-You can get the source from a lof of places:
+You can get the source from a few places:
 <ul>
-<li>download <code>pynetkey.tar.gz</code> from the main site</li>
 <li>If you installed the deb file, you already have the code and Mercurial repository under <code>/usr/share/pyshared/pynetkey/</code></li>
 <li>you can pull the stable source from the local repository mirror:
 	<pre>hg clone static-http://dip.sun.ac.za/~janto/pynetkey/repo pynetkey</pre>
@@ -83,7 +82,19 @@ You can get the source from a lof of places:
 </li>
 </ul>
 
-<h3>Windows Build requirements:</h3>
+<!--
+<h3>Design guidelines</h3>
+Most of the philosophy behind pynetkey is about preferring quality and minimalism over functionality.
+Pynetkey is a security application. As such it has a cautious approach to what gets implemented.
+As code grows it gets more difficult to maintain. Adding features creates more places bugs and unexpected behaviour to sneak in.
+This doesn't necessarily mean pynetkey is against adding features, just that a solution that allows scripting of a features is preferable to integrating the feature into pynetkey.
+Feature creep should be avoided. In fact, removing features if it potentially degrades the quality of pynetkey is not such a bad thing.
+
+Pynetkey's core behaviour must only depend on packages included with the basic ubuntu installation or live-cd. Extra functionality may be enabled by installing additional packages.
+Compatibility with older versions must be preserved as much as possible. Think long and hard before breaking backwards compatibility.
+-->
+
+<h3>Windows Build requirements</h3>
 You can run <code>build.bat</code> to create a distribution file.
 <ul>
 <li>python2.6</li>
