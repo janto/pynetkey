@@ -60,9 +60,13 @@ class DBus_Service(dbus.service.Object):
 	def status(self):
 		return "open" if self.inetkey.firewall_open else "closed"
 
-	#~ @dbus.service.method(dbus_interface=bus_name, out_signature='s')
-	#~ def usage(self):
-		#~ return "{}"
+	@dbus.service.method(dbus_interface=bus_name, out_signature='s')
+	def last_message_from_server(self):
+		return self.inetkey.hint_text[0]
+
+	@dbus.service.method(dbus_interface=bus_name, out_signature='s')
+	def usage(self):
+		return self.inetkey.hint_text[1]
 
 	@dbus.service.method(dbus_interface=bus_name, out_signature='s')
 	def user(self):
