@@ -98,14 +98,20 @@ def main():
 
 			gtk.gdk.threads_enter()
 			try:
-				status = service.status()
-				print status
-				if status == "open":
-					ind.set_icon("pynetkey-open")
-				elif status == "closed":
-					ind.set_icon("pynetkey-closed")
+				detailed_status = service.detailed_status()
+
+				if detailed_status == "error":
+					ind.set_icon("pynetkey-error")
+				if detailed_status == "busy":
+					ind.set_icon("pynetkey-busy")
 				else:
-					assert False, status
+					status = service.status()
+					if status == "open":
+						ind.set_icon("pynetkey-open")
+					elif status == "closed":
+						ind.set_icon("pynetkey-closed")
+					else:
+						assert False, status
 
 				msg = service.last_message_from_server()
 				msg_menu_item.set_label(msg)

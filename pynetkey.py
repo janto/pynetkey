@@ -414,6 +414,7 @@ class Inetkey(object):
 		self.retimer_check_schedule = ReTimer(check_schedule_frequency, check_schedule, immediate=True)
 
 		self.hint_text = ["", ""] # [firewall_message, usage_message] #XXX should I use a lock when modifying?
+		self.detailed_status = ""
 		self.prev_pynotify_message = None
 		self.systrayicon = TrayIcon()
 
@@ -656,10 +657,12 @@ class Inetkey(object):
 			self.hint_text[0] = "Connection Closed"
 			self.hint_text[1] = ""
 			self.systrayicon.set_icon(get_icon("orange"), "\n".join(self.hint_text).strip())
+		self.detailed_status = ""
 
 	def error(self, text):
 		self.logger.error(text)
 		self.hint_text[0] = text
+		self.detailed_status = "error"
 		self.systrayicon.set_icon(get_icon("red"), "\n".join(self.hint_text).strip())
 		if self.config["notify_on_error"] and self.prev_pynotify_message != text: # only if message changed. avoids repeatedly notifying user with same message
 			try:
@@ -678,11 +681,13 @@ class Inetkey(object):
 
 	def warn(self, text):
 		self.logger.warn(text)
+		self.detailed_status = "error"
 		self.systrayicon.set_icon(get_icon("red"), text)
 
 	def info(self, text):
 		self.logger.info(text)
 		self.hint_text[0] = text
+		self.detailed_status = "busy"
 		self.systrayicon.set_icon(get_icon("yellow"), "\n".join(self.hint_text).strip())
 
 	def report_usage(self, text):
