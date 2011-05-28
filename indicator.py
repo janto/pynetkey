@@ -47,7 +47,6 @@ def main():
 		else:
 			service.open()
 
-	usage_menu_item = None
 	msg_menu_item = None
 	for title, icon, callback in [
 		("Toggle FireWall", None, toggle_connection_state),
@@ -61,10 +60,8 @@ def main():
 		("Firewall Usage", None, lambda m,ind: open_url('https://maties2.sun.ac.za/fwusage/')),
 		("IT Website", None, lambda m,ind: open_url('http://it.sun.ac.za/')),
 		("-", None, None),
+		#~ ("Quit", None, lambda m,ind: gtk.main_quit()),
 		("msg", None, None),
-		("usage", None, None),
-		("-", None, None),
-		("Quit", None, lambda m,ind: gtk.main_quit()),
 		]:
 
 		if title == "-":
@@ -72,13 +69,8 @@ def main():
 		else:
 			menu_item = gtk.MenuItem(title)
 
-		if title == "usage":
-			menu_item.set_label("<usage>")
-			menu_item.set_can_focus(False)
-			usage_menu_item = menu_item
-
 		if title == "msg":
-			menu_item.set_label("<msg>")
+			menu_item.set_label("")
 			menu_item.set_can_focus(False)
 			msg_menu_item = menu_item
 
@@ -93,7 +85,7 @@ def main():
 
 	stop_event = threading.Event()
 
-	def monitor_status(stop_event=stop_event, usage_menu_item=usage_menu_item):
+	def monitor_status(stop_event=stop_event, msg_menu_item=msg_menu_item):
 		while 1:
 
 			gtk.gdk.threads_enter()
@@ -114,10 +106,8 @@ def main():
 						assert False, status
 
 				msg = service.last_message_from_server()
-				msg_menu_item.set_label(msg)
-
 				usage = service.usage()
-				usage_menu_item.set_label(usage)
+				msg_menu_item.set_label("\n".join([msg, usage]).strip())
 
 			except dbus.DBusException:
 				ind.set_icon("pynetkey-error")
