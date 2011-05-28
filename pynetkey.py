@@ -73,6 +73,8 @@ assert os.path.exists(os.path.join(root_dir, "icons")), root_dir
 
 running_on_windows = platform.system() in ("Windows", "Microsoft")
 running_on_linux = platform.system() == "Linux"
+running_as_indicator_client = running_on_linux and 0
+running_on_unity = running_on_linux and 0
 
 if running_on_windows:
 	from systrayicon import password_dialog, TrayIcon, gui_quit
@@ -101,9 +103,26 @@ if running_on_windows:
 	#~ TEMP_DIRECTORY = "/tmp"
 
 elif running_on_linux:
-	from gtktrayicon import password_dialog
-	from gtktrayicon import GtkTrayIcon as TrayIcon
-	from gtk import main_quit as gui_quit
+	if running_as_indicator_client:
+		import gtk
+		def password_dialog():
+			logger.debug("call to password_dialog")
+			return None, None
+		class TrayIcon:
+			def construct(self, menu_options, startup=None, on_quit=None):
+				if startup:
+					startup(self)
+				# run the main loop
+				gtk.main()
+			def set_icon(self, filename, text):
+				logger.debug("set_icon: %s %s" %(filename, text))
+	else:
+		if running_on_unity:
+			from indicator_trayicon import TrayIcon
+		else:
+			from gtktrayicon import GtkTrayIcon as TrayIcon
+		from gtktrayicon import password_dialog
+		from gtk import main_quit as gui_quit
 	def open_url(url):
 		os.system('xdg-open %s' % url)
 	def workstation_is_locked():
@@ -175,6 +194,8 @@ class AccessDeniedException(Exception):
 icon_color_mapping = dict(green=102, orange=103, red=104, yellow=105)
 
 def get_icon(name):
+	if running_on_unity:
+		return "pynetkey-%s" % name
 	if running_on_linux: # try svg
 		filename = os.path.abspath(os.path.join(root_dir, "icons/%s.svg" % name))
 		if os.path.exists(filename):
@@ -424,7 +445,7 @@ class Inetkey(object):
 	def startup(self, systrayicon):
 		self.systrayicon = systrayicon
 		self.set_connected_status(False)
-		if self.open_on_launch:
+		if self.open_on_launch and not running_as_indicator_client:
 			self.open_firewall()
 		self.refresher.start()
 		self.usage_checker.start()
@@ -697,13 +718,17 @@ class Inetkey(object):
 def main():
 	# get password and username
 	username, password = prompt_username_password()
-	if username and password:
-		# create application
-		inetkey = Inetkey(username, password)
-		if do_daemon:
-			service = DBus_Service(inetkey=inetkey)
-		inetkey.run()
-		sys.exit() # makes sure everything is dead. get_usage() might take a loooong time to die.
+	if not running_as_indicator_client:
+		if not (username and password):
+			#~ print username, password
+			logger.debug("no username or password. closing.")
+			return
+	# create application
+	inetkey = Inetkey(username, password)
+	if do_daemon:
+		service = DBus_Service(inetkey=inetkey)
+	inetkey.run()
+	sys.exit() # makes sure everything is dead. get_usage() might take a loooong time to die.
 
 if __name__ == '__main__':
 	try:
