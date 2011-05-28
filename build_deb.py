@@ -102,6 +102,18 @@ Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 	os.system("ln --symbolic /usr/share/pyshared/pynetkey/cli.py %s/pynetkey-cli" % usr_bin_dir)
 	#~ os.system("ln --symbolic /usr/share/pyshared/pynetkey/pynetkeyd.sh %s/pynetkey" % usr_bin_dir)
 
+	print "linking icons"
+	pixmaps_dir = os.path.join(base_dir, "usr/share/pixmaps")
+	os.makedirs(pixmaps_dir)
+	for icon_filename in os.listdir(os.path.join(install_dir, "icons")):
+		if not icon_filename.endswith(".svg"):
+			continue
+		if not icon_filename.startswith("pynetkey-"):
+			continue
+		cmd = "ln --symbolic /usr/share/pyshared/pynetkey/icons/%s %s" % (icon_filename, pixmaps_dir)
+		print cmd
+		os.system(cmd)
+
 	print
 
 	print "building package"

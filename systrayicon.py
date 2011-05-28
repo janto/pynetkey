@@ -288,7 +288,7 @@ class TrayIcon:
 	def __init__(self):
 		pass
 	def construct(self, menu_options, startup, on_quit):
-		SysTrayIcon("icons/orange.ico", "inetkey", menu_options, call_on_startup=startup, on_quit=on_quit, default_menu_index=0)
+		SysTrayIcon("icons/closed.ico", "inetkey", menu_options, call_on_startup=startup, on_quit=on_quit, default_menu_index=0)
 
 def gui_quit():
 	pass

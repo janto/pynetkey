@@ -191,7 +191,7 @@ class AccessDeniedException(Exception):
 
 # icon positions in compiled exe
 #XXX why do we need this if there is an icons directory?
-icon_color_mapping = dict(green=102, orange=103, red=104, yellow=105)
+icon_color_mapping = dict(open=102, close=103, error=104, busy=105)
 
 def get_icon(name):
 	if running_on_unity:
@@ -205,6 +205,7 @@ def get_icon(name):
 		return filename
 	if running_from_exe:
 		return icon_color_mapping[name] # try icon in exe
+	assert False, name
 	return None # no icon
 
 def subprocess_check_output(*popenargs, **kwargs):
@@ -498,8 +499,8 @@ class Inetkey(object):
 
 		menu_options = []
 		menu_options.append(("Toggle FireWall", None, toggle_connection_state))
-		menu_options.append(("Open Firewall", get_icon("green"), lambda e: self.open_firewall()))
-		menu_options.append(("Close Firewall", get_icon("orange"), lambda e: self.close_firewall()))
+		menu_options.append(("Open Firewall", get_icon("open"), lambda e: self.open_firewall()))
+		menu_options.append(("Close Firewall", get_icon("closed"), lambda e: self.close_firewall()))
 		menu_options.append(("-", None, None))
 		if platform.system() in ("Windows", "Microsoft"):
 			menu_options.append(("Close on Workstation Lock", lambda: self.close_on_workstation_locked, toggle_close_on_workstation_locked))
@@ -672,19 +673,19 @@ class Inetkey(object):
 		if connected:
 			self.logger.debug("opened")
 			self.hint_text[0] = "Connection Open"
-			self.systrayicon.set_icon(get_icon("green"), "\n".join(self.hint_text).strip())
+			self.systrayicon.set_icon(get_icon("open"), "\n".join(self.hint_text).strip())
 		else:
 			self.logger.debug("closed")
 			self.hint_text[0] = "Connection Closed"
 			self.hint_text[1] = ""
-			self.systrayicon.set_icon(get_icon("orange"), "\n".join(self.hint_text).strip())
+			self.systrayicon.set_icon(get_icon("closed"), "\n".join(self.hint_text).strip())
 		self.detailed_status = ""
 
 	def error(self, text):
 		self.logger.error(text)
 		self.hint_text[0] = text
 		self.detailed_status = "error"
-		self.systrayicon.set_icon(get_icon("red"), "\n".join(self.hint_text).strip())
+		self.systrayicon.set_icon(get_icon("error"), "\n".join(self.hint_text).strip())
 		if self.config["notify_on_error"] and self.prev_pynotify_message != text: # only if message changed. avoids repeatedly notifying user with same message
 			try:
 				import pynotify
@@ -693,7 +694,7 @@ class Inetkey(object):
 			else:
 				if pynotify.init("Pynetkey"):
 					n = pynotify.Notification("Pynetkey error", text)
-					pynotify.Notification.set_property(n, "icon-name", get_icon("red"))
+					pynotify.Notification.set_property(n, "icon-name", get_icon("error"))
 					n.set_urgency(pynotify.URGENCY_CRITICAL)
 					n.show()
 					self.prev_pynotify_message = text
@@ -703,13 +704,13 @@ class Inetkey(object):
 	def warn(self, text):
 		self.logger.warn(text)
 		self.detailed_status = "error"
-		self.systrayicon.set_icon(get_icon("red"), text)
+		self.systrayicon.set_icon(get_icon("error"), text)
 
 	def info(self, text):
 		self.logger.info(text)
 		self.hint_text[0] = text
 		self.detailed_status = "busy"
-		self.systrayicon.set_icon(get_icon("yellow"), "\n".join(self.hint_text).strip())
+		self.systrayicon.set_icon(get_icon("busy"), "\n".join(self.hint_text).strip())
 
 	def report_usage(self, text):
 		self.hint_text[1] = text

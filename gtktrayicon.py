@@ -63,7 +63,7 @@ class GtkTrayIcon(gtk.StatusIcon):
 		#~ gtk.gdk.threads_enter()
 
 		# creates the tray icon
-		self.set_from_file("icons/orange.ico")
+		self.set_from_file("icons/closed.ico")
 		self.connect("button_press_event", self.button_press_callback) # connects the button pressed signal
 		self.set_hover_text('pynetkey')
 
