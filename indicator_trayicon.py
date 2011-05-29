@@ -13,6 +13,8 @@ class TrayIcon:
 
 		menu = gtk.Menu()
 
+		menu_options.append(("Quit", None, on_quit))
+		menu_options.append(("-", None, None))
 		for title, icon, callback in menu_options:
 
 			if title == "-":
