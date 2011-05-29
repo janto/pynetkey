@@ -74,7 +74,10 @@ assert os.path.exists(os.path.join(root_dir, "icons")), root_dir
 running_on_windows = platform.system() in ("Windows", "Microsoft")
 running_on_linux = platform.system() == "Linux"
 running_as_indicator_client = running_on_linux and 0
-running_on_unity = running_on_linux and 0
+running_on_unity = 0
+if running_on_linux:
+	import commands
+	running_on_unity = len(commands.getoutput("pgrep -f unity-panel-service").split("\n")) > 1
 
 if running_on_windows:
 	from systrayicon import password_dialog, TrayIcon, gui_quit
