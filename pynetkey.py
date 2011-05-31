@@ -363,18 +363,12 @@ def get_usage(username, password, _enabled=[True]):
 	opener = FancyURLopener(proxies={}) # no proxy
 	try:
 		result = opener.open(url, data=urllib.urlencode([("client", version)])) # maybe IT will one day want to block a specific version?
-	except IOError, e: # sometimes: The read operation timed out
+		data = result.read()
+	except Exception, e:
+		logger.debug("get_usage returned failure. will not retry until pynetkey restart")
 		logger.debug(str(e))
-		return None
-	except RuntimeError: #maximum recursion depth exceeded
-		#XXX why this sometimes happens is beyond me
-		logger.debug("max recursion depth")
-		return None
-	except AccessDeniedException: # password probably changed while pynetkey had firewall open
-		logger.debug("get_usage returned authentication failure. will not retry until pynetkey restart")
 		_enabled[0] = False # until next restart, just return None
-		return None
-	data = result.read()
+		raise
 
 	result = re.findall('<td align="right"><font size="1">(.*)</font></td>', data)
 	if result:
@@ -418,7 +412,9 @@ class Inetkey(object):
 			try:
 				usage = get_usage(self.username, self.password)
 				self.logger.debug("usage query result: %s" % `usage`)
-				if usage is not None:
+				if usage is None:
+					self.report_usage("")
+				else:
 					self.report_usage("R%s = %s MB" % usage)
 			except Exception, e:
 				raise
@@ -579,11 +575,13 @@ class Inetkey(object):
 		session_id = re.findall('<input type="hidden" name="ID" value="(.*)"', response)[0]
 		# send username
 		self.logger.debug("sending username")
-		assert "user" in response.lower(), response
+		if "user" not in response.lower():
+			raise ConnectionException(response)
 		response = self.make_request([('ID', session_id), ('STATE', "1"), ('DATA', self.username)])
 		# send password
 		self.logger.debug("sending password")
-		assert "password" in response.lower(), response
+		if "password" not in response.lower():
+			raise ConnectionException(response)
 		response = self.make_request([('ID', session_id), ('STATE', "2"), ('DATA', self.password)])
 		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
 		if "denied" in response:
