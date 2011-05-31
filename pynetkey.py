@@ -69,15 +69,23 @@ if os.path.isfile(root_dir): # py2exe gives library.zip as path[0]
 	root_dir = os.path.dirname(root_dir)
 assert os.path.exists(os.path.join(root_dir, "icons")), root_dir
 
-# load platform specific gui code
-
+# determine platform
 running_on_windows = platform.system() in ("Windows", "Microsoft")
 running_on_linux = platform.system() == "Linux"
 running_as_indicator_client = running_on_linux and 0
-running_on_unity = 0
+running_appindicator = 0
 if running_on_linux:
-	import commands
-	running_on_unity = len(commands.getoutput("pgrep -f unity-panel-service").split("\n")) > 1
+	#~ import commands
+	#~ running_appindicator = "ubuntu" in commands.getoutput("lsb_release -s -i").lower() and (commands.getoutput("lsb_release -s -r").strip() >= 10.10)
+	try:
+		import appindicator
+	except ImportError:
+		pass
+	else:
+		running_appindicator = 1
+		del appindicator
+
+# load platform specific gui code
 
 if running_on_windows:
 	from systrayicon import password_dialog, TrayIcon, gui_quit
@@ -120,7 +128,7 @@ elif running_on_linux:
 			def set_icon(self, filename, text):
 				logger.debug("set_icon: %s %s" %(filename, text))
 	else:
-		if running_on_unity:
+		if running_appindicator:
 			from indicator_trayicon import TrayIcon
 		else:
 			from gtktrayicon import GtkTrayIcon as TrayIcon
@@ -197,7 +205,7 @@ class AccessDeniedException(Exception):
 icon_color_mapping = dict(open=102, close=103, error=104, busy=105)
 
 def get_icon(name):
-	if running_on_unity:
+	if running_appindicator: # appindicator gets its icons from the system not via filenames
 		return "pynetkey-%s" % name
 	if running_on_linux: # try svg
 		filename = os.path.abspath(os.path.join(root_dir, "icons/%s.svg" % name))
