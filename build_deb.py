@@ -46,7 +46,7 @@ Comment=Inetkey in Python
 Exec=python /usr/share/pyshared/pynetkey/pynetkey.py
 Terminal=false
 Type=Application
-Icon=/usr/share/pyshared/pynetkey/icons/orange.svg
+Icon=/usr/share/pyshared/pynetkey/icons/pynetkey-main.svg
 Categories=Network;
 """.lstrip())
 
