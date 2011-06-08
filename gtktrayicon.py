@@ -117,6 +117,7 @@ class PasswordDialog:
 		return False
 
 	def __init__(self):
+		gtk.gdk.threads_enter()
 
 		self.read_ready = Event()
 
@@ -165,6 +166,9 @@ class PasswordDialog:
 		self.row2.show()
 		self.column.show()
 		self.window.show()
+
+		gtk.gdk.threads_leave()
+
 		gtk.main()
 
 if __name__ == '__main__':

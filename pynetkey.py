@@ -75,14 +75,17 @@ running_on_linux = platform.system() == "Linux"
 running_as_indicator_client = running_on_linux and 0
 running_appindicator = 0
 if running_on_linux:
-	#~ import commands
-	#~ running_appindicator = "ubuntu" in commands.getoutput("lsb_release -s -i").lower() and (commands.getoutput("lsb_release -s -r").strip() >= 10.10)
+	# use appindicator if we're on natty
 	try:
 		import appindicator
+		import commands
 	except ImportError:
 		pass
 	else:
-		running_appindicator = 1
+		#~ running_appindicator = 1
+		running_appindicator = "ubuntu" in commands.getoutput("lsb_release -s -i").lower() and (float(commands.getoutput("lsb_release -s -r").strip()) >= 11.04)
+		#~ running_appindicator = len(commands.getoutput("pgrep -f unity-panel-service").split("\n")) > 1
+		del commands
 		del appindicator
 
 # load platform specific gui code
