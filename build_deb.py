@@ -116,6 +116,13 @@ Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 
 	print
 
+	print "create sources.list.d entry"
+	sources_list_d = os.path.join(base_dir, "etc/apt/sources.list.d")
+	os.makedirs(sources_list_d)
+	write_to_file(os.path.join(sources_list_d, "pynetkey.list"), "# Added by pynetkey %s\ndeb http://dip.sun.ac.za/~janto/pynetkey /\n" % version)
+
+	print
+
 	print "building package"
 	os.system("fakeroot dpkg --build %s pynetkey%s.deb" % (base_dir, version))
 
