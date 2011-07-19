@@ -519,7 +519,8 @@ class Inetkey(object):
 		menu_options.append(("-", None, None))
 		menu_options.append(("User Admin", None, lambda e: open_url('http://www.sun.ac.za/useradm')))
 		menu_options.append(("Firewall Usage", None, lambda e: open_url('https://maties2.sun.ac.za/fwusage/')))
-		menu_options.append(("IT Website", None, lambda e: open_url('http://it.sun.ac.za/')))
+		#~ menu_options.append(("IT Website", None, lambda e: open_url('http://it.sun.ac.za/')))
+		menu_options.append(("Tariff Structure", None, lambda e: open_url('https://stbsp01.stb.sun.ac.za/innov/it/it-help/Wiki%20Pages/Internet%20Tariff%20Structure.aspx')))
 		menu_options.append(("-", None, None))
 		self.systrayicon.construct(menu_options, startup=self.startup, on_quit=lambda e: on_quit())
 
