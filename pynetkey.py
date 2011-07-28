@@ -577,18 +577,20 @@ class Inetkey(object):
 		self.logger.debug("connecting")
 		response = self.make_request()
 		session_id = re.findall('<input type="hidden" name="ID" value="(.*)"', response)[0]
+		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
 		# send username
 		self.logger.debug("sending username")
 		if "user" not in response.lower():
-			raise ConnectionException(response)
+			raise ConnectionException(stripped_response)
 		response = self.make_request([('ID', session_id), ('STATE', "1"), ('DATA', self.username)])
+		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
 		# send password
 		self.logger.debug("sending password")
 		if "password" not in response.lower():
-			raise ConnectionException(response)
+			raise ConnectionException(stripped_response)
 		response = self.make_request([('ID', session_id), ('STATE', "2"), ('DATA', self.password)])
 		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
-		if "denied" in response:
+		if "denied" in response.lower():
 			raise AccessDeniedException(stripped_response)
 		else:
 			self.logger.info(stripped_response)

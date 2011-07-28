@@ -8,6 +8,7 @@ from __future__ import with_statement
 from __init__ import version
 import os
 import shutil
+import commands
 
 def write_to_file(filename, text):
 	with file(filename, "w") as f:
@@ -63,8 +64,19 @@ Depends: python (>=2.6)
 Installed-Size: 200
 Maintainer: Janto Dreijer <jantod@gmail.com>
 Description: Unofficial GPL alternative to inetkey/sinetkey.
- Pynetkey's primary goals are to be more robust and provide some extra functionality compared to nxinetkey.
+ Pynetkey's primary goals are to be more robust than nxinetkey and to provide some extra functionality and configurability.
 """.lstrip() % dict(version=version))
+
+	write_to_file(os.path.join(deb_dir, "changelog"), """
+pynetkey (%(version)s)
+
+  * Stuff
+
+ -- Janto Dreijer <jantod@gmail.com>  %(date)s
+""".lstrip() % dict(version=version, date=commands.getoutput('date -R')))
+	write_to_file(os.path.join(deb_dir, "changelog.Debian"), "see changelog")
+
+	#~ write_to_file(os.path.join(deb_dir, "conffiles"), "sources.list.d/pynetkey.list") #XXX do we actually want to keep sources.list from previous install?
 
 	doc_dir = os.path.join(base_dir, "usr/share/doc/pynetkey")
 	os.makedirs(doc_dir)
