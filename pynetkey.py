@@ -165,6 +165,7 @@ if __name__ == "__main__":
 		sys.exit(1)
 
 if do_daemon:
+	logger.debug("checking for existing pynetkey process")
 	pid = service_pid()
 	if pid is not None: # already running a pynetkey
 		cmd = "kill -9 %d" % pid
@@ -488,18 +489,22 @@ class Inetkey(object):
 
 		# catch gnome logout event
 		if running_on_linux:
-			import gnome
-			import gnome.ui
-			prog = gnome.init("pynetkey-logout", "1.0", gnome.libgnome_module_info_get(), sys.argv, [])
-			client = gnome.ui.master_client()
-			# set up call back for when 'logout'/'shutdown' button pressed
-			def close_firewall_callback(*args):
-				self.close_firewall()
-			def sys_exit_callback(*args):
-				sys.exit()
-			client.connect("die", sys_exit_callback)
-			client.connect("save-yourself", close_firewall_callback)
-			#~ client.connect("shutdown-cancelled", shutdown_cancelled)
+			try:
+				import gnome
+				import gnome.ui
+			except ImportError:
+				logger.warn("gnome not found. auto close on logout is disabled.")
+			else:
+				prog = gnome.init("pynetkey-logout", "1.0", gnome.libgnome_module_info_get(), sys.argv, [])
+				client = gnome.ui.master_client()
+				# set up call back for when 'logout'/'shutdown' button pressed
+				def close_firewall_callback(*args):
+					self.close_firewall()
+				def sys_exit_callback(*args):
+					sys.exit()
+				client.connect("die", sys_exit_callback)
+				client.connect("save-yourself", close_firewall_callback)
+				#~ client.connect("shutdown-cancelled", shutdown_cancelled)
 
 		menu_options = []
 		menu_options.append(("Toggle FireWall", None, toggle_connection_state))
