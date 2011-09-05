@@ -10,9 +10,12 @@ import os
 import shutil
 import commands
 
-def write_to_file(filename, text):
+def write_to_file(filename, text, executable=False):
 	with file(filename, "w") as f:
 		f.write(text)
+	if executable:
+		result = commands.getoutput("chmod +x %s" % filename)
+		assert not result.strip(), result
 
 def main():
 	data_dir = os.path.abspath(".")
@@ -36,21 +39,7 @@ default = static-http://dip.sun.ac.za/~janto/pynetkey/repo
 
 	print
 
-	print "creating files."
-	shortcut_dir = os.path.join(base_dir, "usr/share/applications")
-	os.makedirs(shortcut_dir)
-	write_to_file(os.path.join(shortcut_dir, "pynetkey.desktop"), """
-[Desktop Entry]
-Version=1.0
-Name=Pynetkey
-Comment=Inetkey in Python
-Exec=python /usr/share/pyshared/pynetkey/pynetkey.py
-Terminal=false
-Type=Application
-Icon=/usr/share/pyshared/pynetkey/icons/pynetkey-main.svg
-Categories=Network;
-""".lstrip())
-
+	print "creating control files"
 	deb_dir = os.path.join(base_dir, "DEBIAN")
 	os.makedirs(deb_dir)
 	write_to_file(os.path.join(deb_dir, "control"), """
@@ -61,25 +50,33 @@ Priority: optional
 Architecture: all
 Essential: no
 Depends: python (>=2.6)
-Installed-Size: 200
+Installed-Size: 250
 Maintainer: Janto Dreijer <jantod@gmail.com>
+Homepage: http://dip.sun.ac.za/~janto/pynetkey
 Description: Unofficial GPL alternative to inetkey/sinetkey.
  Pynetkey's primary goals are to be more robust than nxinetkey and to provide some extra functionality and configurability.
 """.lstrip() % dict(version=version))
 
-	write_to_file(os.path.join(deb_dir, "changelog"), """
-pynetkey (%(version)s)
+	write_to_file(os.path.join(deb_dir, "postinst"), "#!/bin/sh\napt-key add /usr/share/pyshared/pynetkey/janto.key &> /tmp/out_inst", executable=1)
+	write_to_file(os.path.join(deb_dir, "postrm"), "#!/bin/sh\napt-key del BD3E74C9 &> /tmp/out_rm", executable=1)
+	#~ write_to_file(os.path.join(deb_dir, "postrm"), "#!/bin/sh", executable=1)
+
+	doc_dir = os.path.join(base_dir, "usr/share/doc/pynetkey")
+	os.makedirs(doc_dir)
+
+	changelog_filename = os.path.join(doc_dir, "changelog")
+	write_to_file(changelog_filename, """
+pynetkey (%(version)s) unstable; urgency=low
 
   * Stuff
 
  -- Janto Dreijer <jantod@gmail.com>  %(date)s
+
 """.lstrip() % dict(version=version, date=commands.getoutput('date -R')))
-	write_to_file(os.path.join(deb_dir, "changelog.Debian"), "see changelog")
+	write_to_file(os.path.join(doc_dir, "changelog.Debian"), "see changelog")
+	commands.getoutput('gzip -9 %s' % changelog_filename)
+	commands.getoutput('gzip -9 %s' % os.path.join(doc_dir, "changelog.Debian"))
 
-	#~ write_to_file(os.path.join(deb_dir, "conffiles"), "sources.list.d/pynetkey.list") #XXX do we actually want to keep sources.list from previous install?
-
-	doc_dir = os.path.join(base_dir, "usr/share/doc/pynetkey")
-	os.makedirs(doc_dir)
 	write_to_file(os.path.join(doc_dir, "copyright"), """
 Upstream Author(s):
 
@@ -114,6 +111,8 @@ Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 	os.system("ln --symbolic /usr/share/pyshared/pynetkey/cli.py %s/pynetkey-cli" % usr_bin_dir)
 	#~ os.system("ln --symbolic /usr/share/pyshared/pynetkey/pynetkeyd.sh %s/pynetkey" % usr_bin_dir)
 
+	print
+
 	print "linking icons"
 	pixmaps_dir = os.path.join(base_dir, "usr/share/pixmaps")
 	os.makedirs(pixmaps_dir)
@@ -123,31 +122,57 @@ Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 		if not icon_filename.startswith("pynetkey-"):
 			continue
 		cmd = "ln --symbolic /usr/share/pyshared/pynetkey/icons/%s %s" % (icon_filename, pixmaps_dir)
-		print cmd
-		os.system(cmd)
+		#~ print cmd
+		result = commands.getoutput(cmd)
+		assert not result.strip(), result
 
 	print
 
-	print "create sources.list.d entry"
+	print "creating menu item"
+
+	shortcut_dir = os.path.join(base_dir, "usr/share/applications")
+	os.makedirs(shortcut_dir)
+	write_to_file(os.path.join(shortcut_dir, "pynetkey.desktop"), """
+[Desktop Entry]
+Version=1.0
+Name=Pynetkey
+Comment=Inetkey in Python
+Exec=python /usr/share/pyshared/pynetkey/pynetkey.py
+Terminal=false
+Type=Application
+Icon=/usr/share/pyshared/pynetkey/icons/pynetkey-main.svg
+Categories=Network;
+""".lstrip())
+
+	print
+
+	print "creating sources.list.d entry"
 	sources_list_d = os.path.join(base_dir, "etc/apt/sources.list.d")
 	os.makedirs(sources_list_d)
 	write_to_file(os.path.join(sources_list_d, "pynetkey.list"), "# Added by pynetkey %s\ndeb http://dip.sun.ac.za/~janto/pynetkey /\n" % version)
+	#~ write_to_file(os.path.join(deb_dir, "conffiles"), "sources.list.d/pynetkey.list") #XXX do we actually want to keep sources.list from previous install?
 
 	print
 
 	print "building package"
-	os.system("fakeroot dpkg --build %s pynetkey%s.deb" % (base_dir, version))
+	print commands.getoutput("fakeroot dpkg --build %s pynetkey%s.deb" % (base_dir, version))
 
 	print
 
 	print "checking package"
-	os.system("lintian pynetkey%s.deb" % version)
+	print commands.getoutput("lintian pynetkey%s.deb" % version)
+
+	print
+
+	print "signing package"
+	#XXX is default-key respected?
+	print commands.getoutput("debsigs --sign=maint --default-key=BD3E74C9 pynetkey%s.deb" % version)
 
 	print
 
 	print "building index"
 	# http://www.debian.org/doc/manuals/repository-howto/repository-howto.en.html
-	os.system("dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz")
+	print commands.getoutput("dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz")
 
 	print
 
