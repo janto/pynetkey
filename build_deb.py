@@ -57,9 +57,8 @@ Description: Unofficial GPL alternative to inetkey/sinetkey.
  Pynetkey's primary goals are to be more robust than nxinetkey and to provide some extra functionality and configurability.
 """.lstrip() % dict(version=version))
 
-	write_to_file(os.path.join(deb_dir, "postinst"), "#!/bin/sh\napt-key add /usr/share/pyshared/pynetkey/janto.key &> /tmp/out_inst", executable=1)
-	write_to_file(os.path.join(deb_dir, "postrm"), "#!/bin/sh\napt-key del BD3E74C9 &> /tmp/out_rm", executable=1)
-	#~ write_to_file(os.path.join(deb_dir, "postrm"), "#!/bin/sh", executable=1)
+	write_to_file(os.path.join(deb_dir, "postinst"), "#!/bin/sh\napt-key add /usr/share/pyshared/pynetkey/janto.key", executable=1)
+	write_to_file(os.path.join(deb_dir, "postrm"), "#!/bin/sh\napt-key del BD3E74C9", executable=1)
 
 	doc_dir = os.path.join(base_dir, "usr/share/doc/pynetkey")
 	os.makedirs(doc_dir)
@@ -164,9 +163,14 @@ Categories=Network;
 
 	print
 
-	print "signing package"
+	#~ print "signing package"
 	#XXX is default-key respected?
-	print commands.getoutput("debsigs --sign=maint --default-key=BD3E74C9 pynetkey%s.deb" % version)
+	#~ print commands.getoutput("debsigs --sign=maint --default-key=BD3E74C9 pynetkey%s.deb" % version)
+
+	#~ print
+
+	#~ print "checking signed package"
+	#~ print commands.getoutput("lintian pynetkey%s.deb" % version)
 
 	print
 
