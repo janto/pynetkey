@@ -57,7 +57,7 @@ Description: Unofficial GPL alternative to inetkey/sinetkey.
  Pynetkey's primary goals are to be more robust than nxinetkey and to provide some extra functionality and configurability.
 """.lstrip() % dict(version=version))
 
-	write_to_file(os.path.join(deb_dir, "postinst"), "#!/bin/sh\napt-key add /usr/share/pyshared/pynetkey/janto.key", executable=1)
+	write_to_file(os.path.join(deb_dir, "postinst"), "#!/bin/sh\napt-key add /usr/share/pyshared/pynetkey/janto.pubkey", executable=1)
 	write_to_file(os.path.join(deb_dir, "postrm"), "#!/bin/sh\napt-key del BD3E74C9", executable=1)
 
 	doc_dir = os.path.join(base_dir, "usr/share/doc/pynetkey")
@@ -108,7 +108,7 @@ Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 	usr_bin_dir = os.path.join(base_dir, "usr/bin")
 	os.makedirs(usr_bin_dir)
 	os.system("ln --symbolic /usr/share/pyshared/pynetkey/cli.py %s/pynetkey-cli" % usr_bin_dir)
-	#~ os.system("ln --symbolic /usr/share/pyshared/pynetkey/pynetkeyd.sh %s/pynetkey" % usr_bin_dir)
+	os.system("ln --symbolic /usr/share/pyshared/pynetkey/pynetkeyd.sh %s/pynetkey" % usr_bin_dir)
 
 	print
 

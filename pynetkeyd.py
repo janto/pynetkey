@@ -95,7 +95,7 @@ def run_client():
 	parser.add_option("--close", action="store_true", dest="close", default=False, help="close firewall")
 
 	#~ parser.add_option("--start", action="store_true", dest="start", default=False, help="start a Pynetkey process")
-	parser.add_option("--stop", action="store_true", dest="stop", default=False, help="stop all Pynetkey processes")
+	parser.add_option("--stop", action="store_true", dest="stop", default=False, help="shutdown all Pynetkey processes")
 	parser.add_option("--kill", action="store_true", dest="kill", default=False, help="kill all Pynetkey processes (%s)" % pkill_command)
 
 	#~ group = optparse.OptionGroup(parser, "Wait options", "will block until true")
