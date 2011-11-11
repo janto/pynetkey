@@ -206,7 +206,7 @@ class AccessDeniedException(Exception):
 
 # icon positions in compiled exe
 #XXX why do we need this if there is an icons directory?
-icon_color_mapping = dict(open=102, close=103, error=104, busy=105)
+icon_color_mapping = dict(open=102, closed=103, error=104, busy=105)
 
 def get_icon(name):
 	if running_appindicator: # appindicator gets its icons from the system not via filenames
