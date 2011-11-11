@@ -23,8 +23,8 @@ Copyright 2009 Janto Dreijer <jantod@gmail.com>
 
 from __future__ import division, with_statement
 
-refresh_frequency = 6*60
-usage_query_frequency = 1*60
+refresh_frequency = 10*60
+usage_query_frequency = 10*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
 default_connection_hostname = "fw.sun.ac.za"
 connection_port = 950
