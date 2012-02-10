@@ -344,11 +344,7 @@ def prompt_username_password(force_prompt=False):
 			return config["username"], config["password"]
 	return password_dialog()
 
-def get_usage(username, password, _enabled=[True]):
-	if not _enabled[0]:
-		logger.debug("get_usage was disabled")
-		return None
-
+def get_usage(username, password):
 	url = "https://maties2.sun.ac.za/fwusage/"
 
 	class FancyURLopener(urllib.FancyURLopener):
@@ -361,19 +357,12 @@ def get_usage(username, password, _enabled=[True]):
 			# so we hack it
 			_tries[0] += 1
 			if 1 < _tries[0]: # don't auto retry incorrect password
-				raise AccessDeniedException()
+				raise AccessDeniedException("Access Denied")
 			return username, password
 
 	opener = FancyURLopener(proxies={}) # no proxy
-	try:
-		result = opener.open(url, data=urllib.urlencode([("client", version)])) # maybe IT will one day want to block a specific version?
-		data = result.read()
-	except Exception, e:
-		logger.debug("get_usage returned failure. will not retry until pynetkey restart")
-		logger.debug(str(e))
-		_enabled[0] = False # until next restart, just return None
-		raise
-
+	result = opener.open(url, data=urllib.urlencode([("client", version)])) # maybe IT will one day want to block a specific version?
+	data = result.read()
 	result = re.findall('<td align="right"><font size="1">(.*)</font></td>', data)
 	if result:
 		return result[-1], result[-2]
@@ -415,14 +404,23 @@ class Inetkey(object):
 			self.logger.debug("querying usage")
 			try:
 				usage = get_usage(self.username, self.password)
+			except AccessDeniedException, e:
+				self.report_usage("error checking usage: "+str(e))
+				logger.debug("get_usage returned access denied failure. will not retry until pynetkey restart")
+				raise # will cause retimer to stop
+			except Exception, e:
+				self.report_usage("error checking usage: "+str(e))
+				self.usage_checker.interval *= 2 # increase time between intervals
+				self.logger.debug("increasing usage_check interval to %d seconds" % self.usage_checker.interval)
+				#~ raise
+			else:
+				# succesful check
 				self.logger.debug("usage query result: %s" % `usage`)
 				if usage is None:
 					self.report_usage("")
 				else:
 					self.report_usage("R%s = %s MB" % usage)
-			except Exception, e:
-				raise
-				self.report_usage("error checking usage: "+str(e))
+				self.usage_checker.interval = usage_query_frequency # restore original interval on successful check
 		self.usage_checker = ReTimer(usage_query_frequency, check_usage, immediate=True)
 
 		# scheduler
