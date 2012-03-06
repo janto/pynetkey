@@ -26,6 +26,7 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
+Authentication failure handling and retries - Janto (Mar 2012)
 More minor error handling - Janto (Mar 2011)
 Minor error handling - Janto (Sep 2010)
 Firewall changed to TLS - Janto (Jun 2010)
@@ -42,7 +43,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 connection_timeout = 15
-version = "pynetkey cli 20110314"
+version = "pynetkey cli 20120306"
 connection_hostname = "fw.sun.ac.za"
 connection_port = 950
 
@@ -61,6 +62,7 @@ from getpass import getpass
 import ConfigParser
 import base64
 import os
+import traceback
 
 logging.root.setLevel(logging.INFO)
 log_format = "%(name)s@%(asctime)s: %(message)s"
@@ -108,6 +110,9 @@ def load_username_password(config_filename):
 	return username, password
 
 class ConnectionException(Exception):
+	pass
+
+class AccessDeniedException(Exception):
 	pass
 
 class Inetkey(object):
@@ -167,15 +172,17 @@ class Inetkey(object):
 		session_id = re.findall('<input type="hidden" name="ID" value="(.*)"', response)[0]
 		# send username
 		logger.debug("sending username")
-		assert "user" in response.lower(), response
+		if "user" not in response.lower():
+			raise ConnectionException(response)
 		response = self.make_request([('ID', session_id), ('STATE', "1"), ('DATA', self.username)])
 		# send password
 		logger.debug("sending password")
-		assert "password" in response.lower(), response
+		if "password" not in response.lower():
+			raise ConnectionException(response)
 		response = self.make_request([('ID', session_id), ('STATE', "2"), ('DATA', self.password)])
 		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
 		if "denied" in response:
-			raise ConnectionException(stripped_response)
+			raise AccessDeniedException(stripped_response)
 		else:
 			logger.info(stripped_response)
 		return session_id
@@ -216,6 +223,7 @@ def main():
 	parser = OptionParser()
 	parser.add_option("-u", "--user", dest="username", help="", metavar="USERNAME")
 	parser.add_option("-c", "--config", dest="config", help="loads username/password from file", metavar="CONFIG")
+	parser.add_option("-r", "--retries", type="int", dest="retries", help="number of retries on open failure (default=0)", default=0, metavar="RETRIES")
 	options, args = parser.parse_args()
 
 	username = options.username
@@ -233,12 +241,19 @@ def main():
 	# create application
 	inetkey = Inetkey(username, password)
 	# run
-	try:
-		while 1:
-			inetkey.open_firewall()
-			sleep(reconnection_delay)
-	except (KeyboardInterrupt, EOFError):
-		pass
+	retries_left = options.retries + 1 # plus one for initial
+	while 0 < retries_left:
+		retries_left -= 1
+		try:
+			while 1:
+				inetkey.open_firewall()
+				retries_left = options.retries # reset retries on success
+				sleep(reconnection_delay)
+		except (KeyboardInterrupt, EOFError):
+			break
+		except ConnectionException, e:
+			logger.warn(e)
+			traceback.print_exc()
 	inetkey.close_firewall()
 
 if __name__ == '__main__':
