@@ -58,7 +58,7 @@ Description: Unofficial GPL alternative to inetkey/sinetkey.
 """.lstrip() % dict(version=version))
 
 	write_to_file(os.path.join(deb_dir, "postinst"), "#!/bin/sh\napt-key add /usr/share/pyshared/pynetkey/janto.pubkey", executable=1)
-	write_to_file(os.path.join(deb_dir, "postrm"), "#!/bin/sh\napt-key del BD3E74C9", executable=1)
+	#~ write_to_file(os.path.join(deb_dir, "postrm"), "#!/bin/sh\napt-key del BD3E74C9", executable=1)
 
 	doc_dir = os.path.join(base_dir, "usr/share/doc/pynetkey")
 	os.makedirs(doc_dir)
