@@ -30,6 +30,7 @@ import sys
 import time
 
 import optparse
+import json
 
 bus_name = "za.ac.sun.pynetkey"
 object_path = "/za/ac/sun/pynetkey/system"
@@ -61,12 +62,8 @@ class DBus_Service(dbus.service.Object):
 		return "open" if self.inetkey.firewall_open else "closed"
 
 	@dbus.service.method(dbus_interface=bus_name, out_signature='s')
-	def detailed_status(self):
-		return self.inetkey.detailed_status
-
-	@dbus.service.method(dbus_interface=bus_name, out_signature='s')
-	def last_message_from_server(self):
-		return self.inetkey.hint_text[0]
+	def json_status(self):
+		return json.dumps(self.inetkey.status)
 
 	@dbus.service.method(dbus_interface=bus_name, out_signature='s')
 	def usage(self):
@@ -107,9 +104,10 @@ def run_client():
 
 	group = optparse.OptionGroup(parser, "Query options", "print status to stdout")
 	group.add_option("--pid", action="store_true", dest="pid", default=False, help="print process ID to stdout")
+	group.add_option("--json", action="store_true", dest="json_status", default=False, help="print status as returned by firewall to stdout (as json)")
 	group.add_option("--status", action="store_true", dest="status", default=False, help="print firewall status to stdout")
 	#~ group.add_option("--usage", action="store_true", dest="usage", default=False, help="print current user's usage to stdout")
-	group.add_option("--user", action="store_true", dest="user", default=False, help="print current user to stdout")
+	group.add_option("--user", action="store_true", dest="user", default=False, help="print current inetkey user to stdout")
 	parser.add_option_group(group)
 
 	options, args = parser.parse_args()
@@ -174,6 +172,8 @@ def run_client():
 		print service.pid()
 	elif options.status: # output must be clean to allow usage by other scripts
 		print service.status()
+	elif options.json_status: # output must be clean to allow usage by other scripts
+		print service.json_status()
 	elif options.user: # output must be clean to allow usage by other scripts
 		print service.user()
 	else:
