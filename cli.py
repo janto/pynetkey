@@ -26,6 +26,7 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
+New xmlrpc interface to firewall - Janto (Mar 2012)
 Authentication failure handling and retries - Janto (Mar 2012)
 More minor error handling - Janto (Mar 2011)
 Minor error handling - Janto (Sep 2010)
@@ -42,22 +43,21 @@ Initial version - Janto (Nov 2005)
 """
 
 reconnection_delay = 60*10
-connection_timeout = 15
-version = "pynetkey cli 20120306"
-connection_hostname = "fw.sun.ac.za"
-connection_port = 950
+#~ connection_timeout = 15
+version = "pynetkey cli 20120319"
 
 import socket
 import ssl
 #~ socket.setdefaulttimeout(connection_timeout) # global timeout
-import urllib2, urllib
 import logging
-import re
+
 import stat
 import signal
 from optparse import OptionParser
 from time import sleep
 from getpass import getpass
+
+import xmlrpclib
 
 import ConfigParser
 import base64
@@ -72,6 +72,11 @@ logging.basicConfig(
 	format=log_format,
 	)
 logger = logging.getLogger("Inetkey")
+
+connection_url = "https://maties2.sun.ac.za:443/RTAD4-RPC3"
+if os.path.exists("debug_flag_file"): # divert to dev server
+	logger.warn("diverting to dev server")
+	connection_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
 
 def load_username_password(config_filename):
 	username = None
@@ -121,95 +126,36 @@ class Inetkey(object):
 		self.username = username
 		self.password = password
 		self.firewall_open = False
+		self.status = {}
+		self.proxy = xmlrpclib.ServerProxy(connection_url, verbose=False)
 		logger.warn("Pynetkey does not currently authenticate the server certificate")
 
-	def make_request(self, variables=[]):
+	def network_action(self, function, data):
 		try:
-			# python's urllib sucks. easier to do things directly with sockets
-			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			ssl_sock = ssl.wrap_socket(s,
-				#~ ca_certs="/etc/ca_certs_file",
-				cert_reqs=ssl.CERT_NONE,
-				#~ cert_reqs=ssl.CERT_REQUIRED,
-				#~ ssl_version=ssl.PROTOCOL_SSLv3,
-				ssl_version=ssl.PROTOCOL_TLSv1,
-			)
-			ssl_sock.connect((connection_hostname, connection_port))
-
-			#~ print repr(ssl_sock.getpeername())
-			#~ print ssl_sock.cipher()
-			#~ print pprint.pformat(ssl_sock.getpeercert())
-
-			encoded_variables = urllib.urlencode(variables)
-			request = "\r\n".join([
-				"POST / HTTP/1.1" if variables else "GET / HTTP/1.1",
-				"Host: %s" % connection_hostname,
-				"User-Agent: %s" % version,
-				"Content-Length: %d" % len(encoded_variables),
-				"Referer: https://%s:%d/" % (connection_hostname, connection_port),
-				"",
-				encoded_variables,
-			])
-			#~ print request
-			#~ print
-			ssl_sock.write(request)
-
-			# Read a chunk of data.  Will not necessarily read all the data returned by the server.
-			response = ssl_sock.read()
-			#~ print response
-
-			# note that closing the SSLSocket will also close the underlying socket
-			ssl_sock.close()
-
-			return response
+			self.status = function(data)
+			resultmsg = self.status.get("resultmsg", "")
+			if self.status.get("resultcode") != 0:
+				if "rejected" in resultmsg or "password" in resultmsg:
+					raise AccessDeniedException(resultmsg)
+				raise ConnectionException(resultmsg)
+			logger.info(resultmsg) # probably "Success"
 		except (ssl.SSLError, socket.error), e:
 			raise ConnectionException(e)
-		raise ConnectionException(str("error connecting"))
-
-	def authenticate(self):
-		# get sesion ID
-		response = self.make_request()
-		session_id = re.findall('<input type="hidden" name="ID" value="(.*)"', response)[0]
-		# send username
-		logger.debug("sending username")
-		if "user" not in response.lower():
-			raise ConnectionException(response)
-		response = self.make_request([('ID', session_id), ('STATE', "1"), ('DATA', self.username)])
-		# send password
-		logger.debug("sending password")
-		if "password" not in response.lower():
-			raise ConnectionException(response)
-		response = self.make_request([('ID', session_id), ('STATE', "2"), ('DATA', self.password)])
-		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
-		if "denied" in response:
-			raise AccessDeniedException(stripped_response)
-		else:
-			logger.info(stripped_response)
-		return session_id
 
 	def open_firewall(self):
 		logger.info("opening firewall...")
-		try:
-			session_id = self.authenticate()
-			# open request
-			logger.debug("sending 'sign-on' request")
-			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "1")])
-			self.set_connected_status(connected=True)
-		except ConnectionException, e:
-			logger.error(str(e))
+		self.network_action(self.proxy.rtad4inetkey_api_open, dict(requser=self.username, reqpwd=self.password, platform="any"))
+		self.set_connected_status(connected=True)
+
+	def renew_firewall(self):
+		logger.info("renewing firewall...")
+		self.network_action(self.proxy.rtad4inetkey_api_renew, dict(requser=self.username, reqpwd="", platform="any")) # don't send password
+		self.set_connected_status(connected=True)
 
 	def close_firewall(self):
-		if not self.firewall_open:
-			return
 		logger.info("closing firewall...")
-		try:
-			session_id = self.authenticate()
-			# close request
-			logger.debug("sending 'sign-off' request")
-			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "2")])
-			self.set_connected_status(connected=False)
-		except ConnectionException, e:
-			logger.error(str(e))
+		self.network_action(self.proxy.rtad4inetkey_api_close, dict(requser=self.username, reqpwd="", platform="any")) # don't send password
+		self.set_connected_status(connected=False)
 
 	def set_connected_status(self, connected=True):
 		self.firewall_open = connected
@@ -238,22 +184,31 @@ def main():
 		parser.print_help()
 		return
 
-	# create application
 	inetkey = Inetkey(username, password)
-	# run
+	# open
+	try:
+		inetkey.open_firewall()
+	except AccessDeniedException, e:
+		logger.warn(e)
+		return
+	# renew
 	retries_left = options.retries + 1 # plus one for initial
-	while 0 < retries_left:
+	while 1:
+		if retries_left <= 0:
+			logger.info("too many failures. giving up.")
+			break
 		retries_left -= 1
 		try:
 			while 1:
-				inetkey.open_firewall()
-				retries_left = options.retries # reset retries on success
 				sleep(reconnection_delay)
+				inetkey.renew_firewall()
+				retries_left = options.retries # reset retries on success
 		except (KeyboardInterrupt, EOFError):
 			break
 		except ConnectionException, e:
 			logger.warn(e)
 			traceback.print_exc()
+	# close
 	inetkey.close_firewall()
 
 if __name__ == '__main__':

@@ -24,22 +24,21 @@ Copyright 2009 Janto Dreijer <jantod@gmail.com>
 from __future__ import division, with_statement
 
 refresh_frequency = 10*60
-usage_query_frequency = 10*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
-default_connection_hostname = "fw.sun.ac.za"
-connection_port = 950
+
+default_connection_url = "https://maties2.sun.ac.za:443/RTAD4-RPC3"
+
 connection_timeout = 15
 connection_retries = 3 #XXX technically unused
 
 import locale
 locale.setlocale(locale.LC_ALL, 'C') # necessary for scheduler to match days of week consistently
 
+import xmlrpclib
 import ssl
 import socket
 socket.setdefaulttimeout(connection_timeout) # global timeout
-import urllib2, urllib
 
-import re
 from threading import Thread, Timer, Event
 
 from time import localtime, strftime, sleep
@@ -60,6 +59,10 @@ logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", dat
 logging.root.setLevel(logging.WARN)
 if os.path.exists("debug_flag_file"):
 	logging.root.setLevel(logging.DEBUG)
+
+if os.path.exists("debug_flag_file"): # divert to dev server
+	logger.warn("diverting to dev server")
+	connection_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
 
 # determine root directory
 running_from_exe = False
@@ -287,7 +290,7 @@ def get_config_file():
 	conf_obj.set("config", "username", "")
 	conf_obj.set("config", "password", "")
 	conf_obj.set("config", "encoded_password_b32", "")
-	conf_obj.set("config", "connection_hostname", default_connection_hostname)
+	conf_obj.set("config", "connection_url", default_connection_url)
 	conf_obj.set("config", "notify_on_error", "1")
 	conf_obj.set("config", "open_on_launch", "1")
 	conf_obj.set("config", "run_on_open", "")
@@ -301,7 +304,7 @@ def get_config_file():
 	config["username"] = conf_obj.get("config", "username")
 	config["open_on_launch"] = conf_obj.get("config", "open_on_launch") == "1" # convert to boolean
 	config["notify_on_error"] = conf_obj.get("config", "notify_on_error") == "1" # convert to boolean
-	config["connection_hostname"] = conf_obj.get("config", "connection_hostname")
+	config["connection_url"] = conf_obj.get("config", "connection_url")
 
 	# handle password
 	config["password"] = conf_obj.get("config", "password")
@@ -344,30 +347,6 @@ def prompt_username_password(force_prompt=False):
 			return config["username"], config["password"]
 	return password_dialog()
 
-def get_usage(username, password):
-	url = "https://maties2.sun.ac.za/fwusage/"
-
-	class FancyURLopener(urllib.FancyURLopener):
-		def prompt_user_passwd(self, a, b, _tries=[0]):
-			# will be called again if password is wrong
-			# FancyURLopener does not respect its maxtries property for all HTTP 40x messages.
-			# fix for later versions of python:
-			# http://hg.python.org/cpython/rev/46356267ce8f/
-			# Issue1368368 - prompt_user_passwd() in FancyURLopener masks 401 Unauthorized error page
-			# so we hack it
-			_tries[0] += 1
-			if 1 < _tries[0]: # don't auto retry incorrect password
-				raise AccessDeniedException("Access Denied")
-			return username, password
-
-	opener = FancyURLopener(proxies={}) # no proxy
-	result = opener.open(url, data=urllib.urlencode([("client", version)])) # maybe IT will one day want to block a specific version?
-	data = result.read()
-	result = re.findall('<td align="right"><font size="1">(.*)</font></td>', data)
-	if result:
-		return result[-1], result[-2]
-	return None
-
 class Inetkey(object):
 
 	def __init__(self, username, password):
@@ -376,9 +355,14 @@ class Inetkey(object):
 		self.config = config
 
 		self.logger = logging.getLogger("Inetkey")
-		self.connection_hostname = config["connection_hostname"]
+		self.connection_url = config["connection_url"]
+
+		self.status = {}
+		self.proxy = xmlrpclib.ServerProxy(connection_url, verbose=False)
+
 		self.username = username
 		self.password = password
+
 		self.open_on_launch = config["open_on_launch"]
 		self.run_on_open = config["run_on_open"]
 		self.run_on_close = config["run_on_close"]
@@ -395,33 +379,8 @@ class Inetkey(object):
 						self.close_firewall()
 						sleep(5) # frequency to check if workstation unlocked
 				self.logger.debug("refreshing connection")
-				self.open_firewall()
+				self.renew_firewall()
 		self.refresher = ReTimer(refresh_frequency, refresh)
-
-		def check_usage(self=self):
-			if not self.firewall_open:
-				return
-			self.logger.debug("querying usage")
-			try:
-				usage = get_usage(self.username, self.password)
-			except AccessDeniedException, e:
-				self.report_usage("error checking usage: "+str(e))
-				logger.debug("get_usage returned access denied failure. will not retry until pynetkey restart")
-				raise # will cause retimer to stop
-			except Exception, e:
-				self.report_usage("error checking usage: "+str(e))
-				self.usage_checker.interval *= 2 # increase time between intervals
-				self.logger.debug("increasing usage_check interval to %d seconds" % self.usage_checker.interval)
-				#~ raise
-			else:
-				# succesful check
-				self.logger.debug("usage query result: %s" % `usage`)
-				if usage is None:
-					self.report_usage("")
-				else:
-					self.report_usage("R%s = %s MB" % usage)
-				self.usage_checker.interval = usage_query_frequency # restore original interval on successful check
-		self.usage_checker = ReTimer(usage_query_frequency, check_usage, immediate=True)
 
 		# scheduler
 		#XXX hackish approach to schedule events
@@ -458,13 +417,11 @@ class Inetkey(object):
 		if self.open_on_launch and not running_as_indicator_client:
 			self.open_firewall()
 		self.refresher.start()
-		self.usage_checker.start()
 		self.retimer_check_schedule.start()
 
 	def shutdown(self):
 		try:
 			self.refresher.stop()
-			self.usage_checker.stop()
 			self.retimer_check_schedule.stop()
 			self.close_firewall()
 		finally:
@@ -523,82 +480,30 @@ class Inetkey(object):
 # ---------------
 # networking
 
-	def make_request(self, variables=[]):
+	def network_action(self, function, data):
 		try:
-			for retry in range(connection_retries): #XXX technically unused
-				# python's urllib sucks. easier to do things directly with sockets
-				s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				ssl_sock = ssl.wrap_socket(s,
-					#~ ca_certs="/etc/ca_certs_file",
-					cert_reqs=ssl.CERT_NONE,
-					#~ cert_reqs=ssl.CERT_REQUIRED,
-					#~ ssl_version=ssl.PROTOCOL_SSLv3,
-					ssl_version=ssl.PROTOCOL_TLSv1,
-				)
-				ssl_sock.connect((self.connection_hostname, connection_port))
-
-				#~ print repr(ssl_sock.getpeername())
-				#~ print ssl_sock.cipher()
-				#~ print pprint.pformat(ssl_sock.getpeercert())
-
-				encoded_variables = urllib.urlencode(variables)
-				request = "\r\n".join([
-					"POST / HTTP/1.1" if variables else "GET / HTTP/1.1",
-					"Host: %s" % self.connection_hostname,
-					"User-Agent: %s" % version,
-					"Content-Length: %d" % len(encoded_variables),
-					"Referer: https://%s:%d/" % (self.connection_hostname, connection_port),
-					"",
-					encoded_variables,
-				])
-				#~ print request
-				#~ print
-				ssl_sock.write(request)
-
-				# Read a chunk of data.  Will not necessarily read all the data returned by the server.
-				response = ssl_sock.read()
-				#~ print response
-
-				# note that closing the SSLSocket will also close the underlying socket
-				ssl_sock.close()
-
-				# break from retry loop
-				return response
+			self.status = function(data)
+			resultmsg = self.status.get("resultmsg", "")
+			if self.status.get("resultcode") != 0:
+				if "rejected" in resultmsg or "password" in resultmsg:
+					raise AccessDeniedException(resultmsg)
+				raise ConnectionException(resultmsg)
+			logger.info(resultmsg) # probably "Success"
+			usage = self.status.get("monthusage")
+			if usage:
+				self.report_usage("R%0.2f" % usage)
 		except (ssl.SSLError, socket.error), e:
 			raise ConnectionException(e)
-		raise ConnectionException(str("error connecting"))
 
-	def authenticate(self):
-		# get sesion ID
-		self.logger.debug("connecting")
-		response = self.make_request()
-		session_id = re.findall('<input type="hidden" name="ID" value="(.*)"', response)[0]
-		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
-		# send username
-		self.logger.debug("sending username")
-		if "user" not in response.lower():
-			raise ConnectionException(stripped_response)
-		response = self.make_request([('ID', session_id), ('STATE', "1"), ('DATA', self.username)])
-		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
-		# send password
-		self.logger.debug("sending password")
-		if "password" not in response.lower():
-			raise ConnectionException(stripped_response)
-		response = self.make_request([('ID', session_id), ('STATE', "2"), ('DATA', self.password)])
-		stripped_response = re.findall('<font face="verdana" size="3">(.*)', response)[0].strip()
-		if "denied" in response.lower():
-			raise AccessDeniedException(stripped_response)
-		else:
-			self.logger.info(stripped_response)
-		return session_id
+	def renew_firewall(self):
+		logger.info("renewing firewall...")
+		self.network_action(self.proxy.rtad4inetkey_api_renew, dict(requser=self.username, reqpwd="", platform="any")) # don't send password
+		self.set_connected_status(connected=True)
 
 	def open_firewall(self):
 		self.info("opening firewall...")
 		try:
-			session_id = self.authenticate()
-			# open request
-			self.logger.debug("sending 'sign-on' request")
-			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "1")])
+			self.network_action(self.proxy.rtad4inetkey_api_open, dict(requser=self.username, reqpwd=self.password, platform="any"))
 			self.set_connected_status(connected=True)
 		except (AccessDeniedException), e:
 			self.set_connected_status(connected=False) # do not retry open
@@ -647,10 +552,7 @@ class Inetkey(object):
 			return True # True is required by gnome save-yourself event
 		self.info("closing firewall...")
 		try:
-			session_id = self.authenticate()
-			# close request
-			self.logger.debug("sending 'sign-off' request")
-			self.make_request([('ID', session_id), ('STATE', "3"), ('DATA', "2")])
+			self.network_action(self.proxy.rtad4inetkey_api_close, dict(requser=self.username, reqpwd="", platform="any")) # don't send password
 			self.set_connected_status(connected=False)
 		except (AccessDeniedException), e:
 			self.set_connected_status(connected=False) # do not retry close, just assume it's ok not to close XXX valid assumption?
