@@ -62,7 +62,7 @@ if os.path.exists("debug_flag_file"):
 
 if os.path.exists("debug_flag_file"): # divert to dev server
 	logger.warn("diverting to dev server")
-	connection_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
+	default_connection_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
 
 # determine root directory
 running_from_exe = False
@@ -358,7 +358,7 @@ class Inetkey(object):
 		self.connection_url = config["connection_url"]
 
 		self.status = {}
-		self.proxy = xmlrpclib.ServerProxy(connection_url, verbose=False)
+		self.proxy = xmlrpclib.ServerProxy(self.connection_url, verbose=False)
 
 		self.username = username
 		self.password = password
