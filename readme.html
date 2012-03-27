@@ -31,25 +31,20 @@ If you need help, email me (Janto Dreijer) at jantod@gmail.com
 
 <h3>Windows Installation</h3>
 <ol>
-<li>download <code>pynetkey.zip</code> from the main site</li>
-<li>extract somewhere and run <code>pynetkey.exe</code></li>
+<li>download <code>pynetkey.<b>zip</b></code> from the main site</li>
+<li>extract somewhere permanent and run <code>pynetkey.exe</code></li>
 <li>(optional) create a shortcut to <code>pynetkey.exe</code> (such as on your desktop)</li>
 </ol>
 
 <h3>Ubuntu Installation</h3>
 
 <p>
-To install the GUI version you can add the following line to your <code>/etc/apt/sources.list</code>:<br />
-<code>deb http://dip.sun.ac.za/~janto/pynetkey /</code><br />
-and then install the <code>pynetkey</code> package.
-</p>
-
-<p>
-Alternatively:
+To install the GUI version
 <ol>
-<li>download <code>pynetkey.deb</code> from the main site</li>
+<li>download <code>pynetkey.<b>deb</b></code> from the main site</li>
 <li>open it (by for example double clicking) and click on the "Install Package" button</li>
 <li>a Pynetkey icon wil appear in the Applications menu under Internet. You can right click on it to add an additional launcher icon to the desktop.</li>
+<li>an entry under <code>sources.list.d</code> will be automatically added</li>
 </ol>
 </p>
 
@@ -57,7 +52,7 @@ Alternatively:
 The GUI version was developed with an ubuntu/gnome system in mind.
 A minimal single-file non-gui version is also available as <code>cli.py</code> and should run on most systems with Python2.6.
 If you have an earlier Python, installing the <a href="http://pypi.python.org/pypi/ssl/">SSL package</a> might work.
-If you installed the GUI version, this version is accessible from the terminal as <code>python-cli</code>.
+If you installed the GUI version, the non-gui version is accessible from the terminal as <code>python-cli</code>.
 </p>
 
 <h2>Licensing</h2>
@@ -147,9 +142,9 @@ The day of week is optional, so <code>open3 = 02:00</code> will open the firewal
 <p>
 Setting <code>open_on_launch=1</code> (the default) will open the firewall on launch. Set <code>open_on_launch=0</code> to disable this feature.
 </p>
-<p>
+<!-- <p>
 The <code>connection_url</code> setting has been removed.
-</p>
+</p> -->
 <p>
 Setting <code>notify_on_error=1</code> (default) will use pynotify to alert the user when an error occurs. This might become irritating on bad connections (SCN/matieswifi), in which case disable it by setting it equal to <code>0</code>.
 </p>
@@ -192,7 +187,10 @@ open6 = Sat 16:55
 The deb file installs a shortlink to cli.py as <code>/usr/bin/pynetkey-cli</code>. That means you can just type <code>pynetkey-cli</code> into the terminal for quick firewall control.
 </p>
 <p>
-If you want more daemon-like behaviour you might be interested in the following command:
+The <code>pynetkey</code> terminal command will give you some control of a running pynetkey gui process.
+</p>
+<p>
+If you want a more persistent command line process you might be interested in the following command:
 <code>screen -d -m pynetkey-cli -c ~/.inetkeyrc</code>
 This will create a screen session and immediatly detach it. cli.py will continue to log in and stay connected. You will need to attach the screen with <code>screen -r</code> to log out when you're done.
 </p>
