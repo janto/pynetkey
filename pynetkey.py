@@ -27,9 +27,11 @@ refresh_frequency = 10*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
 
 default_connection_url = "https://maties2.sun.ac.za:443/RTAD4-RPC3"
+if 0: # divert to dev server, used in debugging
+	logger.warn("diverting to dev server")
+	default_connection_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
 
 connection_timeout = 15
-connection_retries = 3 #XXX technically unused
 
 import locale
 locale.setlocale(locale.LC_ALL, 'C') # necessary for scheduler to match days of week consistently
@@ -59,10 +61,6 @@ logging.basicConfig(format="%(levelname)s@%(asctime)s=%(name)s:%(message)s", dat
 logging.root.setLevel(logging.WARN)
 if os.path.exists("debug_flag_file"):
 	logging.root.setLevel(logging.DEBUG)
-
-if os.path.exists("debug_flag_file"): # divert to dev server
-	logger.warn("diverting to dev server")
-	default_connection_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
 
 # determine root directory
 running_from_exe = False
@@ -497,8 +495,13 @@ class Inetkey(object):
 
 	def renew_firewall(self):
 		logger.info("renewing firewall...")
-		self.network_action(self.proxy.rtad4inetkey_api_renew, dict(requser=self.username, reqpwd="", platform="any")) # don't send password
-		self.set_connected_status(connected=True)
+		try:
+			self.network_action(self.proxy.rtad4inetkey_api_renew, dict(requser=self.username, reqpwd="", platform="any")) # don't send password
+			self.set_connected_status(connected=True)
+		except (ConnectionException), e:
+			self.error(str(e))
+			return
+			#~ raise
 
 	def open_firewall(self):
 		self.info("opening firewall...")
