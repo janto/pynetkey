@@ -26,6 +26,7 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
+Report usage - Janto (Apr 2012)
 New xmlrpc interface to firewall - Janto (Mar 2012)
 Authentication failure handling and retries - Janto (Mar 2012)
 More minor error handling - Janto (Mar 2011)
@@ -44,7 +45,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 #~ connection_timeout = 15
-version = "pynetkey cli 20120319"
+version = "pynetkey cli 20120414"
 
 import socket
 import ssl
@@ -73,10 +74,10 @@ logging.basicConfig(
 	)
 logger = logging.getLogger("Inetkey")
 
-connection_url = "https://maties2.sun.ac.za:443/RTAD4-RPC3"
+default_firewall_url = "https://maties2.sun.ac.za:443/RTAD4-RPC3"
 if os.path.exists("debug_flag_file"): # divert to dev server
 	logger.warn("diverting to dev server")
-	connection_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
+	default_firewall_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
 
 def load_username_password(config_filename):
 	username = None
@@ -127,7 +128,7 @@ class Inetkey(object):
 		self.password = password
 		self.firewall_open = False
 		self.status = {}
-		self.proxy = xmlrpclib.ServerProxy(connection_url, verbose=False)
+		self.proxy = xmlrpclib.ServerProxy(default_firewall_url, verbose=False)
 		logger.warn("Pynetkey does not currently authenticate the server certificate")
 
 	def network_action(self, function, data):
@@ -139,6 +140,8 @@ class Inetkey(object):
 					raise AccessDeniedException(resultmsg)
 				raise ConnectionException(resultmsg)
 			logger.info(resultmsg) # probably "Success"
+			if "monthusage" in self.status:
+				logger.info("monthusage: R%0.2f" % self.status["monthusage"])
 		except (ssl.SSLError, socket.error), e:
 			raise ConnectionException(e)
 
@@ -169,7 +172,7 @@ def main():
 	parser = OptionParser()
 	parser.add_option("-u", "--user", dest="username", help="", metavar="USERNAME")
 	parser.add_option("-c", "--config", dest="config", help="loads username/password from file", metavar="CONFIG")
-	parser.add_option("-r", "--retries", type="int", dest="retries", help="number of retries on open failure (default=0)", default=0, metavar="RETRIES")
+	parser.add_option("-r", "--retries", type="int", dest="retries", help="number of renew failures before aborting (default=0)", default=0, metavar="RETRIES")
 	options, args = parser.parse_args()
 
 	username = options.username
