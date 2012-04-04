@@ -26,10 +26,10 @@ from __future__ import division, with_statement
 refresh_frequency = 10*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
 
-default_connection_url = "https://maties2.sun.ac.za:443/RTAD4-RPC3"
+default_firewall_url = "https://maties2.sun.ac.za:443/RTAD4-RPC3"
 if 0: # divert to dev server, used in debugging
 	logger.warn("diverting to dev server")
-	default_connection_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
+	default_firewall_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
 
 connection_timeout = 15
 
@@ -288,7 +288,7 @@ def get_config_file():
 	conf_obj.set("config", "username", "")
 	conf_obj.set("config", "password", "")
 	conf_obj.set("config", "encoded_password_b32", "")
-	conf_obj.set("config", "connection_url", default_connection_url)
+	conf_obj.set("config", "firewall_url", default_firewall_url)
 	conf_obj.set("config", "notify_on_error", "1")
 	conf_obj.set("config", "open_on_launch", "1")
 	conf_obj.set("config", "run_on_open", "")
@@ -302,7 +302,7 @@ def get_config_file():
 	config["username"] = conf_obj.get("config", "username")
 	config["open_on_launch"] = conf_obj.get("config", "open_on_launch") == "1" # convert to boolean
 	config["notify_on_error"] = conf_obj.get("config", "notify_on_error") == "1" # convert to boolean
-	config["connection_url"] = conf_obj.get("config", "connection_url")
+	config["firewall_url"] = conf_obj.get("config", "firewall_url") #XXX undocumented feature
 
 	# handle password
 	config["password"] = conf_obj.get("config", "password")
@@ -353,10 +353,10 @@ class Inetkey(object):
 		self.config = config
 
 		self.logger = logging.getLogger("Inetkey")
-		self.connection_url = config["connection_url"]
+		self.firewall_url = config["firewall_url"]
 
 		self.status = {}
-		self.proxy = xmlrpclib.ServerProxy(self.connection_url, verbose=False)
+		self.proxy = xmlrpclib.ServerProxy(self.firewall_url, verbose=False)
 
 		self.username = username
 		self.password = password
@@ -481,6 +481,7 @@ class Inetkey(object):
 	def network_action(self, function, data):
 		try:
 			self.status = function(data)
+			logger.debug(self.status)
 			resultmsg = self.status.get("resultmsg", "")
 			if self.status.get("resultcode") != 0:
 				if "rejected" in resultmsg or "password" in resultmsg:
