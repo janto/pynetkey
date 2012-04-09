@@ -205,6 +205,9 @@ class ConnectionException(Exception):
 class AccessDeniedException(Exception):
 	pass
 
+class RenewFailureException(Exception):
+	pass
+
 # icon positions in compiled exe
 #XXX why do we need this if there is an icons directory?
 icon_color_mapping = dict(open=102, closed=103, error=104, busy=105)
@@ -298,6 +301,7 @@ def get_config_file():
 
 	# read settings from file
 	conf_obj.read(config_filename)
+
 	config = dict()
 	config["username"] = conf_obj.get("config", "username")
 	config["open_on_launch"] = conf_obj.get("config", "open_on_launch") == "1" # convert to boolean
@@ -486,6 +490,8 @@ class Inetkey(object):
 			if self.status.get("resultcode") != 0:
 				if "rejected" in resultmsg or "password" in resultmsg:
 					raise AccessDeniedException(resultmsg)
+				if "Renew failed: Not authenticated" in resultmsg: # network error probably caused a previous renew to fail and authentication was lost
+					raise RenewFailureException(resultmsg)
 				raise ConnectionException(resultmsg)
 			logger.info(resultmsg) # probably "Success"
 			usage = self.status.get("monthusage")
@@ -503,6 +509,12 @@ class Inetkey(object):
 			self.error(str(e))
 			return
 			#~ raise
+		except (RenewFailureException), e:
+			self.error(str(e))
+			logger.debug("trying to recover from renew failure. hopefully network error has been resolved.")
+			self.open_firewall()
+			return
+			#~ raise
 
 	def open_firewall(self):
 		self.info("opening firewall...")
@@ -510,7 +522,7 @@ class Inetkey(object):
 			self.network_action(self.proxy.rtad4inetkey_api_open, dict(requser=self.username, reqpwd=self.password, platform="any"))
 			self.set_connected_status(connected=True)
 		except (AccessDeniedException), e:
-			self.set_connected_status(connected=False) # do not retry open
+			self.set_connected_status(connected=False) # do not renew, assumes firewall closed
 			self.error(str(e))
 			return # probably no need to check run_on_open and run_while_open if an error occured
 		except (ConnectionException), e:
