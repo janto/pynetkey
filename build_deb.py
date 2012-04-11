@@ -54,7 +54,7 @@ Installed-Size: 250
 Maintainer: Janto Dreijer <jantod@gmail.com>
 Homepage: http://dip.sun.ac.za/~janto/pynetkey
 Description: Unofficial GPL alternative to inetkey/sinetkey.
- Pynetkey's primary goals are to be more robust than nxinetkey and to provide some extra functionality and configurability.
+ Pynetkey's primary goals are to be robust and provide some extra functionality and configurability above the web interface.
 """.lstrip() % dict(version=version))
 
 	write_to_file(os.path.join(deb_dir, "postinst"), "#!/bin/sh\napt-key add /usr/share/pyshared/pynetkey/janto.pubkey", executable=1)
@@ -164,10 +164,11 @@ Categories=Network;
 	print
 
 	#~ print "signing package"
-	#XXX is default-key respected?
+	#~ #XXX is default-key respected?
 	#~ print commands.getoutput("debsigs --sign=maint --default-key=BD3E74C9 pynetkey%s.deb" % version)
+	#~ print commands.getoutput("debsig-verify -v pynetkey%s.deb" % version)
 
-	#~ print
+	print
 
 	#~ print "checking signed package"
 	#~ print commands.getoutput("lintian pynetkey%s.deb" % version)
