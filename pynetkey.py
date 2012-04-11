@@ -439,6 +439,12 @@ class Inetkey(object):
 		def on_quit(hwnd=0, msg=0, wparam=0, lparam=0):
 			self.shutdown()
 			return 1
+		def switch_user(event):
+			username, password = prompt_username_password(force_prompt=True)
+			if username and password:
+				self.close_firewall()
+				self.username, self.password = username, password
+				self.open_firewall()
 		def toggle_close_on_workstation_locked(sysTrayIcon):
 			self.close_on_workstation_locked = not self.close_on_workstation_locked
 			#~ self.logger.info("close_on_workstation_locked=%s" % self.close_on_workstation_locked)
@@ -470,6 +476,7 @@ class Inetkey(object):
 		menu_options.append(("-", None, None))
 		if platform.system() in ("Windows", "Microsoft"):
 			menu_options.append(("Close on Workstation Lock", lambda: self.close_on_workstation_locked, toggle_close_on_workstation_locked))
+			menu_options.append(("Switch User", None, switch_user))
 		menu_options.append(("Edit Config File", None, lambda e: open_url(config_filename)))
 		menu_options.append(("-", None, None))
 		menu_options.append(("User Admin", None, lambda e: open_url('http://www.sun.ac.za/useradm')))
