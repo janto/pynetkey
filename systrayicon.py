@@ -59,7 +59,8 @@ class SysTrayIcon(object):
 				   win32con.WM_COMMAND: self.command,
 				   win32con.WM_USER+20 : self.notify,}
 		if self.on_quit:
-			message_map[win32con.WM_QUERYENDSESSION] = self.on_quit
+			message_map[win32con.WM_QUERYENDSESSION] = lambda *e: True
+			message_map[win32con.WM_ENDSESSION] = self.on_quit
 		# Register the Window class.
 		window_class = win32gui.WNDCLASS()
 		hinst = window_class.hInstance = win32gui.GetModuleHandle(None)
@@ -154,6 +155,7 @@ class SysTrayIcon(object):
 		self.refresh_icon(recreate=True)
 
 	def destroy(self, hwnd, msg, wparam, lparam):
+		# called when closed
 		if self.on_quit:
 			self.on_quit(self)
 		nid = (self.hwnd, 0)
