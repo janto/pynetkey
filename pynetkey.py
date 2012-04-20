@@ -27,9 +27,6 @@ refresh_frequency = 10*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
 
 default_firewall_url = "https://maties2.sun.ac.za:443/RTAD4-RPC3"
-if 0: # divert to dev server, used in debugging
-	logger.warn("diverting to dev server")
-	default_firewall_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
 
 connection_timeout = 15
 
@@ -506,7 +503,7 @@ class Inetkey(object):
 			usage = self.status.get("monthusage")
 			if usage:
 				self.report_usage("R%0.2f" % usage)
-		except (ssl.SSLError, socket.error), e:
+		except (ssl.SSLError, socket.error, xmlrpclib.Error), e:
 			raise ConnectionException(e)
 
 	def renew_firewall(self):

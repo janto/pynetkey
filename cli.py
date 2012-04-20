@@ -75,9 +75,6 @@ logging.basicConfig(
 logger = logging.getLogger("Inetkey")
 
 default_firewall_url = "https://maties2.sun.ac.za:443/RTAD4-RPC3"
-if os.path.exists("debug_flag_file"): # divert to dev server
-	logger.warn("diverting to dev server")
-	default_firewall_url = "https://rtaddev.sun.ac.za:443/RTAD4-RPC3"
 
 def load_username_password(config_filename):
 	username = None
@@ -142,7 +139,7 @@ class Inetkey(object):
 			logger.info(resultmsg) # probably "Success"
 			if "monthusage" in self.status:
 				logger.info("monthusage: R%0.2f" % self.status["monthusage"])
-		except (ssl.SSLError, socket.error), e:
+		except (ssl.SSLError, socket.error, xmlrpclib.Error), e:
 			raise ConnectionException(e)
 
 	def open_firewall(self):
@@ -172,7 +169,7 @@ def main():
 	parser = OptionParser()
 	parser.add_option("-u", "--user", dest="username", help="", metavar="USERNAME")
 	parser.add_option("-c", "--config", dest="config", help="loads username/password from file", metavar="CONFIG")
-	parser.add_option("-r", "--retries", type="int", dest="retries", help="number of renew failures before aborting (default=0)", default=0, metavar="RETRIES")
+	parser.add_option("-r", "--retries", type="int", dest="retries", help="number of renew retries to do before aborting (default=1)", default=1, metavar="RETRIES")
 	options, args = parser.parse_args()
 
 	username = options.username
