@@ -380,8 +380,10 @@ class Inetkey(object):
 					while workstation_is_locked():
 						self.close_firewall()
 						sleep(5) # frequency to check if workstation unlocked
-				self.logger.debug("refreshing connection")
+				self.logger.debug("renewing")
 				self.renew_firewall()
+			else:
+				self.logger.debug("firewall not open so not renewing")
 		self.refresher = ReTimer(refresh_frequency, refresh)
 
 		# scheduler
@@ -514,6 +516,8 @@ class Inetkey(object):
 			self.set_connected_status(connected=True)
 		except (ConnectionException), e:
 			self.error(str(e))
+			logger.debug("trying to recover from connection exception. hopefully network error has been resolved.") #XXX maybe should wait a few minutes?
+			self.open_firewall()
 			return
 			#~ raise
 		except (RenewFailureException), e:
