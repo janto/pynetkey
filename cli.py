@@ -179,8 +179,13 @@ def main():
 		username, password = load_username_password(options.config)
 
 	if username and not password:
-		password = getpass()
-	if not username or not password:
+		try:
+			password = getpass()
+		except (KeyboardInterrupt, EOFError):
+			password = "" # empty
+	if not username or not password \
+			or '\x03' in password: # Due to a python bug http://bugs.python.org/issue11236 , ctrl-c is not caught so at least check for its code
+		print "Version:", version
 		parser.print_help()
 		return
 
