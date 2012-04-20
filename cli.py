@@ -45,7 +45,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 #~ connection_timeout = 15
-version = "pynetkey cli 20120414"
+version = "pynetkey cli 20120420"
 
 import socket
 import ssl
