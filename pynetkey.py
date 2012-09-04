@@ -358,6 +358,10 @@ class Inetkey(object):
 
 		self.status = {}
 		self.proxy = xmlrpclib.ServerProxy(self.firewall_url, verbose=False)
+		#~ for name in self.proxy.system.listMethods():
+			#~ print name
+			#~ print '\t', self.proxy.system.methodSignature(name)
+			#~ print '\t', self.proxy.system.methodHelp(name)
 
 		self.username = username
 		self.password = password
@@ -378,7 +382,7 @@ class Inetkey(object):
 						self.close_firewall()
 						sleep(5) # frequency to check if workstation unlocked
 				self.logger.debug("renewing")
-				self.renew_firewall()
+				self.open_firewall()
 			else:
 				self.logger.debug("firewall not open so not renewing")
 		self.refresher = ReTimer(refresh_frequency, refresh)
@@ -501,33 +505,16 @@ class Inetkey(object):
 				raise ConnectionException(resultmsg)
 			logger.info(resultmsg) # probably "Success"
 			usage = self.status.get("monthusage")
-			if usage:
-				self.report_usage("R%0.2f" % usage)
+			bytes = self.status.get("monthbytes")
+			if usage is not None and bytes is not None:
+				self.report_usage("R%0.2f (%d MB)" % (usage, bytes/1024/1024))
 		except (ssl.SSLError, socket.error, xmlrpclib.Error), e:
 			raise ConnectionException(e)
-
-	def renew_firewall(self):
-		logger.info("renewing firewall...")
-		try:
-			self.network_action(self.proxy.rtad4inetkey_api_renew, dict(requser=self.username, reqpwd="", platform="any")) # don't send password
-			self.set_connected_status(connected=True)
-		except (ConnectionException), e:
-			self.error(str(e))
-			logger.debug("trying to recover from connection exception. hopefully network error has been resolved.") #XXX maybe should wait a few minutes?
-			self.open_firewall()
-			return
-			#~ raise
-		except (RenewFailureException), e:
-			self.error(str(e))
-			logger.debug("trying to recover from renew failure. hopefully network error has been resolved.")
-			self.open_firewall()
-			return
-			#~ raise
 
 	def open_firewall(self):
 		self.info("opening firewall...")
 		try:
-			self.network_action(self.proxy.rtad4inetkey_api_open, dict(requser=self.username, reqpwd=self.password, platform="any"))
+			self.network_action(self.proxy.rtad4inetkey_api_open2, dict(requser=self.username, reqpwd=self.password, platform="any", keepalive=0))
 			self.set_connected_status(connected=True)
 		except (AccessDeniedException), e:
 			self.set_connected_status(connected=False) # do not renew, assumes firewall closed
@@ -576,7 +563,7 @@ class Inetkey(object):
 			return True # True is required by gnome save-yourself event
 		self.info("closing firewall...")
 		try:
-			self.network_action(self.proxy.rtad4inetkey_api_close, dict(requser=self.username, reqpwd="", platform="any")) # don't send password
+			self.network_action(self.proxy.rtad4inetkey_api_close2, dict(requser=self.username, reqpwd=self.password, platform="any"))
 			self.set_connected_status(connected=False)
 		except (AccessDeniedException), e:
 			self.set_connected_status(connected=False) # do not retry close, just assume it's ok not to close XXX valid assumption?

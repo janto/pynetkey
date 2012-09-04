@@ -26,6 +26,7 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
+Updated to use open2/close2 calls - Janto (Sep 2012)
 Report usage - Janto (Apr 2012)
 New xmlrpc interface to firewall - Janto (Mar 2012)
 Authentication failure handling and retries - Janto (Mar 2012)
@@ -45,7 +46,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 #~ connection_timeout = 15
-version = "pynetkey cli 20120420"
+version = "pynetkey cli 20120905"
 
 import socket
 import ssl
@@ -139,22 +140,19 @@ class Inetkey(object):
 			logger.info(resultmsg) # probably "Success"
 			if "monthusage" in self.status:
 				logger.info("monthusage: R%0.2f" % self.status["monthusage"])
+			if "monthbytes" in self.status:
+				logger.info("monthbytes: %d MB" % (self.status["monthbytes"]/1024.0/1024.0))
 		except (ssl.SSLError, socket.error, xmlrpclib.Error), e:
 			raise ConnectionException(e)
 
 	def open_firewall(self):
 		logger.info("opening firewall...")
-		self.network_action(self.proxy.rtad4inetkey_api_open, dict(requser=self.username, reqpwd=self.password, platform="any"))
-		self.set_connected_status(connected=True)
-
-	def renew_firewall(self):
-		logger.info("renewing firewall...")
-		self.network_action(self.proxy.rtad4inetkey_api_renew, dict(requser=self.username, reqpwd="", platform="any")) # don't send password
+		self.network_action(self.proxy.rtad4inetkey_api_open2, dict(requser=self.username, reqpwd=self.password, platform="any", keepalive=0))
 		self.set_connected_status(connected=True)
 
 	def close_firewall(self):
 		logger.info("closing firewall...")
-		self.network_action(self.proxy.rtad4inetkey_api_close, dict(requser=self.username, reqpwd="", platform="any")) # don't send password
+		self.network_action(self.proxy.rtad4inetkey_api_close2, dict(requser=self.username, reqpwd=self.password, platform="any"))
 		self.set_connected_status(connected=False)
 
 	def set_connected_status(self, connected=True):
@@ -206,7 +204,7 @@ def main():
 		try:
 			while 1:
 				sleep(reconnection_delay)
-				inetkey.renew_firewall()
+				inetkey.open_firewall()
 				retries_left = options.retries # reset retries on success
 		except (KeyboardInterrupt, EOFError):
 			break

@@ -37,7 +37,7 @@ setup(
 	zipfile = None, # put in exe
 
 	data_files = [
-		("icons", icon_filenames),
+		("icons", icon_filenames+["icons/main.ico"]),
 		("", ["readme.html"]),
 		("", ["license.txt"]),
 	],

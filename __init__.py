@@ -3,4 +3,4 @@
 """
 the version number is shown in the title bar of the password dialog box.
 """
-version = "20120504"
+version = "20120905"
