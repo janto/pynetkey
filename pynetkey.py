@@ -257,30 +257,28 @@ def get_config_file():
 
 	logger.debug("reading config from %s" % config_filename)
 
-	if not os.path.exists(config_filename):
-		# create empty config file
-		file(config_filename, "w")
+	if os.path.exists(config_filename):
+		# make file user-level read/write only
+		os.chmod(config_filename, stat.S_IRUSR | stat.S_IWUSR)
 
-	# make file user-level read/write only
-	os.chmod(config_filename, stat.S_IRUSR | stat.S_IWUSR)
-
-	# load password and save encoded back to config file
-	conf_obj = ConfigParser.ConfigParser()
-	conf_obj.add_section("config")
-	conf_obj.set("config", "password", "")
-	conf_obj.set("config", "encoded_password_b32", "")
-	conf_obj.read(config_filename)
-	password = conf_obj.get("config", "password")
-	if password: # provided as plaintext
-		logger.debug("encoding password and saving into %s" % config_filename)
-		encoded_password = base64.b32encode(password)
-		conf_obj.set("config", "encoded_password_b32", encoded_password)
-		conf_obj.set("config", "password", "") # clear plaintext
-		# save encoded password
-		with file(config_filename, "w") as f:
-			conf_obj.write(f)
-	del conf_obj # just to emphasize independance from rest of code
-	del password # just to emphasize independance from rest of code
+	if os.path.exists(config_filename):
+		# load password and save encoded back to config file
+		conf_obj = ConfigParser.ConfigParser()
+		conf_obj.add_section("config")
+		conf_obj.set("config", "password", "")
+		conf_obj.set("config", "encoded_password_b32", "")
+		conf_obj.read(config_filename)
+		password = conf_obj.get("config", "password")
+		if password: # provided as plaintext
+			logger.debug("encoding password and saving into %s" % config_filename)
+			encoded_password = base64.b32encode(password)
+			conf_obj.set("config", "encoded_password_b32", encoded_password)
+			conf_obj.set("config", "password", "") # clear plaintext
+			# save encoded password
+			with file(config_filename, "w") as f:
+				conf_obj.write(f)
+		del conf_obj # just to emphasize independance from rest of code
+		del password # just to emphasize independance from rest of code
 
 	# set default values
 	conf_obj = ConfigParser.ConfigParser()
@@ -595,11 +593,11 @@ class Inetkey(object):
 		self.prev_pynotify_message = None
 		self.firewall_open = connected # set state
 		if connected:
-			self.logger.debug("opened")
+			self.logger.info("firewall opened")
 			self.hint_text[0] = "Connection Open"
 			self.systrayicon.set_icon(get_icon("open"), "\n".join(self.hint_text).strip())
 		else:
-			self.logger.debug("closed")
+			self.logger.info("firewall closed")
 			self.hint_text[0] = "Connection Closed"
 			self.hint_text[1] = ""
 			self.systrayicon.set_icon(get_icon("closed"), "\n".join(self.hint_text).strip())
