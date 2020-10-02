@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 """
 
 This script is a minimal console version of pynetkey -- which is inetkey written in Python.
-http://bitbucket.org/janto/pynetkey
+https://github.com/janto/pynetkey
 
 Pynetkey is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
+Move to github, specify python2 in #! - Janto (Oct 2020)
 Updated to use open2/close2 calls - Janto (Sep 2012)
 Report usage - Janto (Apr 2012)
 New xmlrpc interface to firewall - Janto (Mar 2012)
