@@ -67,7 +67,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 					if not callable(icon):
 						new.SetBitmap(wx.Bitmap(icon))
 				except:
-					print icon
+					print(icon)
 					raise
 			menu.AppendItem(new)
 

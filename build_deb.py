@@ -4,31 +4,31 @@
 this script could probably work as bash script, but I hate bash scripts. http://mywiki.wooledge.org/BashPitfalls
 """
 
-from __future__ import with_statement
-from __init__ import version
+
+from .__init__ import version
 import os
 import shutil
-import commands
+import subprocess
 
 def write_to_file(filename, text, executable=False):
 	with file(filename, "w") as f:
 		f.write(text)
 	if executable:
-		result = commands.getoutput("chmod +x %s" % filename)
+		result = subprocess.getoutput("chmod +x %s" % filename)
 		assert not result.strip(), result
 
 def main():
 	data_dir = os.path.abspath(".")
 	base_dir = "/tmp/pynetkey"
-	print "deleting base_dir"
+	print("deleting base_dir")
 	try:
 		shutil.rmtree(base_dir)
 	except OSError:
 		pass
 
-	print
+	print()
 
-	print "cloning mercurial repo"
+	print("cloning mercurial repo")
 	install_dir = os.path.join(base_dir, "usr/share/pyshared/pynetkey")
 	os.makedirs(install_dir)
 	os.system("hg clone . %s" % install_dir)
@@ -37,9 +37,9 @@ def main():
 default = static-http://dip.sun.ac.za/~janto/pynetkey/repo
 """.lstrip())
 
-	print
+	print()
 
-	print "creating control files"
+	print("creating control files")
 	deb_dir = os.path.join(base_dir, "DEBIAN")
 	os.makedirs(deb_dir)
 	write_to_file(os.path.join(deb_dir, "control"), """
@@ -71,10 +71,10 @@ pynetkey (%(version)s) unstable; urgency=low
 
  -- Janto Dreijer <jantod@gmail.com>  %(date)s
 
-""".lstrip() % dict(version=version, date=commands.getoutput('date -R')))
+""".lstrip() % dict(version=version, date=subprocess.getoutput('date -R')))
 	write_to_file(os.path.join(doc_dir, "changelog.Debian"), "see changelog")
-	commands.getoutput('gzip -9 %s' % changelog_filename)
-	commands.getoutput('gzip -9 %s' % os.path.join(doc_dir, "changelog.Debian"))
+	subprocess.getoutput('gzip -9 %s' % changelog_filename)
+	subprocess.getoutput('gzip -9 %s' % os.path.join(doc_dir, "changelog.Debian"))
 
 	write_to_file(os.path.join(doc_dir, "copyright"), """
 Upstream Author(s):
@@ -110,9 +110,9 @@ Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 	os.system("ln --symbolic /usr/share/pyshared/pynetkey/cli.py %s/pynetkey-cli" % usr_bin_dir)
 	os.system("ln --symbolic /usr/share/pyshared/pynetkey/pynetkeyd.sh %s/pynetkey" % usr_bin_dir)
 
-	print
+	print()
 
-	print "linking icons"
+	print("linking icons")
 	pixmaps_dir = os.path.join(base_dir, "usr/share/pixmaps")
 	os.makedirs(pixmaps_dir)
 	for icon_filename in os.listdir(os.path.join(install_dir, "icons")):
@@ -122,12 +122,12 @@ Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 			continue
 		cmd = "ln --symbolic /usr/share/pyshared/pynetkey/icons/%s %s" % (icon_filename, pixmaps_dir)
 		#~ print cmd
-		result = commands.getoutput(cmd)
+		result = subprocess.getoutput(cmd)
 		assert not result.strip(), result
 
-	print
+	print()
 
-	print "creating menu item"
+	print("creating menu item")
 
 	shortcut_dir = os.path.join(base_dir, "usr/share/applications")
 	os.makedirs(shortcut_dir)
@@ -143,45 +143,45 @@ Icon=/usr/share/pyshared/pynetkey/icons/pynetkey-main.svg
 Categories=Network;
 """.lstrip())
 
-	print
+	print()
 
-	print "creating sources.list.d entry"
+	print("creating sources.list.d entry")
 	sources_list_d = os.path.join(base_dir, "etc/apt/sources.list.d")
 	os.makedirs(sources_list_d)
 	write_to_file(os.path.join(sources_list_d, "pynetkey.list"), "# Added by pynetkey %s\ndeb http://dip.sun.ac.za/~janto/pynetkey /\n" % version)
 	#~ write_to_file(os.path.join(deb_dir, "conffiles"), "sources.list.d/pynetkey.list") #XXX do we actually want to keep sources.list from previous install?
 
-	print
+	print()
 
-	print "building package"
-	print commands.getoutput("fakeroot dpkg --build %s pynetkey%s.deb" % (base_dir, version))
+	print("building package")
+	print(subprocess.getoutput("fakeroot dpkg --build %s pynetkey%s.deb" % (base_dir, version)))
 
-	print
+	print()
 
-	print "checking package"
-	print commands.getoutput("lintian pynetkey%s.deb" % version)
+	print("checking package")
+	print(subprocess.getoutput("lintian pynetkey%s.deb" % version))
 
-	print
+	print()
 
 	#~ print "signing package"
 	#~ #XXX is default-key respected?
 	#~ print commands.getoutput("debsigs --sign=maint --default-key=BD3E74C9 pynetkey%s.deb" % version)
 	#~ print commands.getoutput("debsig-verify -v pynetkey%s.deb" % version)
 
-	print
+	print()
 
 	#~ print "checking signed package"
 	#~ print commands.getoutput("lintian pynetkey%s.deb" % version)
 
-	print
+	print()
 
-	print "building index"
+	print("building index")
 	# http://www.debian.org/doc/manuals/repository-howto/repository-howto.en.html
-	print commands.getoutput("dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz")
+	print(subprocess.getoutput("dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz"))
 
-	print
+	print()
 
-	print "done"
+	print("done")
 
 if __name__ == "__main__":
 	main()

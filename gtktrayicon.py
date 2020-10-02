@@ -21,8 +21,8 @@ Copyright 2009 Janto Dreijer <jantod@gmail.com>
 
 """
 
-from __future__ import with_statement
-import __init__
+
+from . import __init__
 
 import gtk
 import gobject
@@ -172,7 +172,7 @@ class PasswordDialog:
 		gtk.main()
 
 if __name__ == '__main__':
-	print password_dialog()
+	print(password_dialog())
 	menu_options = []
 	base = GtkTrayIcon()
 	menu_options.append(("Quit with icon", "icons/blue.ico", gtk.main_quit))

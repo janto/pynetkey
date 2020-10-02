@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 """
 
@@ -26,7 +26,7 @@ Also, pynetkey is not supported by IT, but feel free to contact me if there is a
 
 History
 ------
-Move to github, specify python2 in #! - Janto (Oct 2020)
+Move to github, specify python2/3, python 2to3 in #! - Janto (Oct 2020)
 Updated to use open2/close2 calls - Janto (Sep 2012)
 Report usage - Janto (Apr 2012)
 New xmlrpc interface to firewall - Janto (Mar 2012)
@@ -47,7 +47,7 @@ Initial version - Janto (Nov 2005)
 
 reconnection_delay = 60*10
 #~ connection_timeout = 15
-version = "pynetkey cli 20120905"
+version = "pynetkey cli 20201002"
 
 import socket
 import ssl
@@ -60,9 +60,9 @@ from optparse import OptionParser
 from time import sleep
 from getpass import getpass
 
-import xmlrpclib
+import xmlrpc.client
 
-import ConfigParser
+import configparser
 import base64
 import os
 import traceback
@@ -91,13 +91,13 @@ def load_username_password(config_filename):
 	os.chmod(config_filename, stat.S_IRUSR | stat.S_IWUSR)
 
 	# process config file
-	config = ConfigParser.ConfigParser()
+	config = configparser.ConfigParser()
 	config.read(config_filename)
 	try:
 		username = config.get("config", "username")
 		password = config.get("config", "password")
-	except ConfigParser.NoSectionError:
-		print "error loading username/password"
+	except configparser.NoSectionError:
+		print("error loading username/password")
 	else:
 		if password: # provided as plaintext
 			encoded_password = base64.b32encode(password)
@@ -127,8 +127,8 @@ class Inetkey(object):
 		self.password = password
 		self.firewall_open = False
 		self.status = {}
-		self.proxy = xmlrpclib.ServerProxy(default_firewall_url, verbose=False)
-		logger.warn("Pynetkey does not currently authenticate the server certificate")
+		self.proxy = xmlrpc.client.ServerProxy(default_firewall_url, verbose=False)
+		logger.warning("Pynetkey does not currently authenticate the server certificate")
 
 	def network_action(self, function, data):
 		try:
@@ -143,7 +143,7 @@ class Inetkey(object):
 				logger.info("monthusage: R%0.2f" % self.status["monthusage"])
 			if "monthbytes" in self.status:
 				logger.info("monthbytes: %d MB" % (self.status["monthbytes"]/1024.0/1024.0))
-		except (ssl.SSLError, socket.error, xmlrpclib.Error), e:
+		except (ssl.SSLError, socket.error, xmlrpc.client.Error) as e:
 			raise ConnectionException(e)
 
 	def open_firewall(self):
@@ -184,7 +184,7 @@ def main():
 			password = "" # empty
 	if not username or not password \
 			or '\x03' in password: # Due to a python bug http://bugs.python.org/issue11236 , ctrl-c is not caught so at least check for its code
-		print "Version:", version
+		print("Version:", version)
 		parser.print_help()
 		return
 
@@ -192,8 +192,8 @@ def main():
 	# open
 	try:
 		inetkey.open_firewall()
-	except AccessDeniedException, e:
-		logger.warn(e)
+	except AccessDeniedException as e:
+		logger.warning(e)
 		return
 	# renew
 	retries_left = options.retries + 1 # plus one for initial
@@ -209,8 +209,8 @@ def main():
 				retries_left = options.retries # reset retries on success
 		except (KeyboardInterrupt, EOFError):
 			break
-		except ConnectionException, e:
-			logger.warn(e)
+		except ConnectionException as e:
+			logger.warning(e)
 			traceback.print_exc()
 	# close
 	inetkey.close_firewall()

@@ -110,8 +110,8 @@ Setting `notify_on_error=1` (default) will use pynotify to alert the user when a
 
 ## Tips and Tricks
 
-The deb file installs a shortlink to [cli.py](https://github.com/janto/pynetkey/blob/master/cli.py) as `/usr/bin/pynetkey-cli`. That means you can just type `pynetkey-cli` into the terminal for quick firewall control.
+The deb file installs a shortlink to `cli.py` as `/usr/bin/pynetkey-cli`. That means you can just type `pynetkey-cli` into the terminal for quick firewall control.
 
 The `pynetkey` terminal command will give you some control of a running pynetkey gui process.
 
-If you want a more persistent command line process you might be interested in the following command: `screen -d -m pynetkey-cli -c ~/.inetkeyrc` This will create a screen session and immediatly detach it. [cli.py](https://github.com/janto/pynetkey/blob/master/cli.py) will continue to log in and stay connected. You will need to attach the screen with `screen -r` to log out when you're done.
+If you want a more persistent command line process you might be interested in the following command: `screen -d -m pynetkey-cli -c ~/.inetkeyrc` This will create a screen session and immediatly detach it. `cli.py` will continue to log in and stay connected. You will need to attach the screen with `screen -r` to log out when you're done.

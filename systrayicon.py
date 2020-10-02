@@ -20,7 +20,7 @@ except ImportError:
 	import win32gui
 
 import os.path
-import __init__
+from . import __init__
 
 class SysTrayIcon(object):
 	'''TODO'''
@@ -104,7 +104,7 @@ class SysTrayIcon(object):
 							   self._add_ids_to_menu_options(option_action),
 							   self._next_action_id))
 			else:
-				print 'Unknown item', option_text, option_icon, option_action
+				print('Unknown item', option_text, option_icon, option_action)
 			self._next_action_id += 1
 		return result
 
@@ -253,7 +253,7 @@ def non_string_iterable(obj):
 	except TypeError:
 		return False
 	else:
-		return not isinstance(obj, basestring)
+		return not isinstance(obj, str)
 
 def password_dialog():
 	def line(n):
@@ -299,30 +299,30 @@ def gui_quit():
 if __name__ == '__main__':
 	import itertools, glob, random
 	#~ print prompt_username_password()
-	icons = itertools.imap(os.path.abspath, itertools.cycle(sorted(glob.glob('icons\\*.ico'))))
+	icons = map(os.path.abspath, itertools.cycle(sorted(glob.glob('icons\\*.ico'))))
 	hover_text = "SysTrayIcon.py Demo"
-	def hello(sysTrayIcon): print "Hello World."
-	def simon(sysTrayIcon): print "Hello Simon."
+	def hello(sysTrayIcon): print("Hello World.")
+	def simon(sysTrayIcon): print("Hello Simon.")
 	def switch_icon(sysTrayIcon):
-		sysTrayIcon.icon = icons.next()
+		sysTrayIcon.icon = next(icons)
 		sysTrayIcon.refresh_icon()
 	def check():
 		return random.choice([True, False])
 	menu_options = [
-		('Say Hello', icons.next(), hello),
+		('Say Hello', next(icons), hello),
 		('Switch Icon', None, switch_icon),
 		('-', None, None),
-		('hello', icons.next(), hello),
+		('hello', next(icons), hello),
 		('checked?', check, hello),
 		('-', None, None),
-		('A sub-menu', icons.next(),
+		('A sub-menu', next(icons),
 			(
-			('Say Hello to Simon', icons.next(), simon),
-				('Switch Icon', icons.next(), switch_icon),
+			('Say Hello to Simon', next(icons), simon),
+				('Switch Icon', next(icons), switch_icon),
 			)
 		)
 	]
-	def bye(sysTrayIcon): print 'Bye, then.'
+	def bye(sysTrayIcon): print('Bye, then.')
 
-	SysTrayIcon(icons.next(), hover_text, menu_options, on_quit=bye, default_menu_index=1)
+	SysTrayIcon(next(icons), hover_text, menu_options, on_quit=bye, default_menu_index=1)
 

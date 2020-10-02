@@ -6,10 +6,10 @@ You could play with "python setup.py sdist" but rather use the build.sh script t
 
 from distutils.core import setup
 import os
-import __init__
+from . import __init__
 import platform
 from itertools import *
-import pynetkey
+from . import pynetkey
 
 if platform.system() in ("Windows", "Microsoft"):
 	import py2exe
@@ -21,10 +21,10 @@ else:
 	raise Exception(platform.system()+" not supported")
 
 try:
-	icon_filenames = ["icons/%s.ico" % c for c in pynetkey.icon_color_mapping.keys()]
-	icon_indices = [(n, "icons/%s.ico" % c) for c, n in pynetkey.icon_color_mapping.items()]
+	icon_filenames = ["icons/%s.ico" % c for c in list(pynetkey.icon_color_mapping.keys())]
+	icon_indices = [(n, "icons/%s.ico" % c) for c, n in list(pynetkey.icon_color_mapping.items())]
 except ImportError:
-	print "There is an extra pynetkey directory within this one. Probably left over from another build script. Delete it."
+	print("There is an extra pynetkey directory within this one. Probably left over from another build script. Delete it.")
 	raise
 
 setup(

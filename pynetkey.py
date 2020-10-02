@@ -21,7 +21,7 @@ Copyright 2009 Janto Dreijer <jantod@gmail.com>
 
 """
 
-from __future__ import division, with_statement
+
 
 refresh_frequency = 10*60
 check_schedule_frequency = 30 # must be faster than every 60sec to avoid missing a minute
@@ -33,7 +33,7 @@ connection_timeout = 15
 import locale
 locale.setlocale(locale.LC_ALL, 'C') # necessary for scheduler to match days of week consistently
 
-import xmlrpclib
+import xmlrpc.client
 import ssl
 import socket
 socket.setdefaulttimeout(connection_timeout) # global timeout
@@ -49,7 +49,7 @@ import platform
 import sys
 import traceback
 
-import __init__
+from . import __init__
 version = "pynetkey %s" % __init__.version
 
 import logging
@@ -76,12 +76,12 @@ if running_on_linux:
 	# use appindicator if we're on natty
 	try:
 		import appindicator
-		import commands
+		import subprocess
 	except ImportError:
 		pass
 	else:
 		#~ running_appindicator = 1
-		running_appindicator = "ubuntu" in commands.getoutput("lsb_release -s -i").lower() and (float(commands.getoutput("lsb_release -s -r").strip()) >= 11.04)
+		running_appindicator = "ubuntu" in subprocess.getoutput("lsb_release -s -i").lower() and (float(subprocess.getoutput("lsb_release -s -r").strip()) >= 11.04)
 		#~ running_appindicator = len(commands.getoutput("pgrep -f unity-panel-service").split("\n")) > 1
 		del commands
 		del appindicator
@@ -89,7 +89,7 @@ if running_on_linux:
 # load platform specific gui code
 
 if running_on_windows:
-	from systrayicon import password_dialog, TrayIcon, gui_quit
+	from .systrayicon import password_dialog, TrayIcon, gui_quit
 	#~ from wxtrayicon import TrayIcon, password_dialog, gui_quit
 	import win32api
 	def open_url(url):
@@ -130,10 +130,10 @@ elif running_on_linux:
 				logger.debug("set_icon: %s %s" %(filename, text))
 	else:
 		if running_appindicator:
-			from indicator_trayicon import TrayIcon
+			from .indicator_trayicon import TrayIcon
 		else:
-			from gtktrayicon import GtkTrayIcon as TrayIcon
-		from gtktrayicon import password_dialog
+			from .gtktrayicon import GtkTrayIcon as TrayIcon
+		from .gtktrayicon import password_dialog
 		from gtk import main_quit as gui_quit
 	def open_url(url):
 		os.system('xdg-open %s' % url)
@@ -153,13 +153,13 @@ log_filename = os.path.join(TEMP_DIRECTORY, "pynetkey_error.txt")
 do_daemon = running_on_linux
 if do_daemon:
 	try:
-		from pynetkeyd import DBus_Service, service_pid
+		from .pynetkeyd import DBus_Service, service_pid
 	except ImportError:
 		do_daemon = False #XXX is dbus installed by default?
 
 if __name__ == "__main__":
 	if len(sys.argv) > 1:
-		print "pynetkey.py does not accept any arguments. You probably want pynetkey-cli"
+		print("pynetkey.py does not accept any arguments. You probably want pynetkey-cli")
 		sys.exit(1)
 
 if do_daemon:
@@ -244,7 +244,7 @@ class CalledProcessError(subprocess.CalledProcessError):
 		self.output = output
 		subprocess.CalledProcessError.__init__(self, returncode, cmd)
 
-import ConfigParser
+import configparser
 import base64
 import stat
 _cached_config = None
@@ -263,7 +263,7 @@ def get_config_file():
 
 	if os.path.exists(config_filename):
 		# load password and save encoded back to config file
-		conf_obj = ConfigParser.ConfigParser()
+		conf_obj = configparser.ConfigParser()
 		conf_obj.add_section("config")
 		conf_obj.set("config", "password", "")
 		conf_obj.set("config", "encoded_password_b32", "")
@@ -281,7 +281,7 @@ def get_config_file():
 		del password # just to emphasize independance from rest of code
 
 	# set default values
-	conf_obj = ConfigParser.ConfigParser()
+	conf_obj = configparser.ConfigParser()
 	conf_obj.add_section("config")
 	conf_obj.set("config", "username", "")
 	conf_obj.set("config", "password", "")
@@ -355,7 +355,7 @@ class Inetkey(object):
 		self.firewall_url = config["firewall_url"]
 
 		self.status = {}
-		self.proxy = xmlrpclib.ServerProxy(self.firewall_url, verbose=False)
+		self.proxy = xmlrpc.client.ServerProxy(self.firewall_url, verbose=False)
 		#~ for name in self.proxy.system.listMethods():
 			#~ print name
 			#~ print '\t', self.proxy.system.methodSignature(name)
@@ -506,7 +506,7 @@ class Inetkey(object):
 			bytes = self.status.get("monthbytes")
 			if usage is not None and bytes is not None:
 				self.report_usage("R%0.2f (%d MB)" % (usage, bytes/1024/1024))
-		except (ssl.SSLError, socket.error, xmlrpclib.Error), e:
+		except (ssl.SSLError, socket.error, xmlrpc.client.Error) as e:
 			raise ConnectionException(e)
 
 	def open_firewall(self):
@@ -514,11 +514,11 @@ class Inetkey(object):
 		try:
 			self.network_action(self.proxy.rtad4inetkey_api_open2, dict(requser=self.username, reqpwd=self.password, platform="any", keepalive=0))
 			self.set_connected_status(connected=True)
-		except (AccessDeniedException), e:
+		except (AccessDeniedException) as e:
 			self.set_connected_status(connected=False) # do not renew, assumes firewall closed
 			self.error(str(e))
 			return # probably no need to check run_on_open and run_while_open if an error occured
-		except (ConnectionException), e:
+		except (ConnectionException) as e:
 			self.error(str(e))
 			return # probably no need to check run_on_open and run_while_open if an error occured
 			#~ raise
@@ -526,11 +526,11 @@ class Inetkey(object):
 			self.logger.debug(self.run_on_open)
 			try:
 				subprocess_check_output(self.run_on_open, shell=True, stderr=subprocess.STDOUT)
-			except OSError, e:
+			except OSError as e:
 				self.close_firewall()
 				self.error(str(e))
 				return # probably no need to try run_while_open, so just return
-			except CalledProcessError, e:
+			except CalledProcessError as e:
 				self.close_firewall()
 				self.error("%s. output:\n%s" % (str(e), e.output))
 				return # probably no need to try run_while_open, so just return
@@ -540,7 +540,7 @@ class Inetkey(object):
 				try:
 					run_while_open_subprocess = subprocess.Popen(self.run_while_open, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 					self.run_while_open_subprocess = run_while_open_subprocess
-				except (OSError), e:
+				except (OSError) as e:
 					self.close_firewall()
 					self.error("%s. output:\n%s" % (str(e), self.run_while_open_subprocess.stdout.read()))
 					return
@@ -563,11 +563,11 @@ class Inetkey(object):
 		try:
 			self.network_action(self.proxy.rtad4inetkey_api_close2, dict(requser=self.username, reqpwd=self.password, platform="any"))
 			self.set_connected_status(connected=False)
-		except (AccessDeniedException), e:
+		except (AccessDeniedException) as e:
 			self.set_connected_status(connected=False) # do not retry close, just assume it's ok not to close XXX valid assumption?
 			self.error(str(e))
 			# "return" not done here to ensure run_on_close and run_while_open handled correctly
-		except (ConnectionException), e:
+		except (ConnectionException) as e:
 			self.error(str(e))
 			# "return" not done here to ensure run_on_close and run_while_open handled correctly
 		if self.run_while_open_subprocess: # done before run_on_close in case there are errors in that command
@@ -580,9 +580,9 @@ class Inetkey(object):
 			self.logger.debug(self.run_on_close)
 			try:
 				subprocess_check_output(self.run_on_close, shell=True, stderr=subprocess.STDOUT)
-			except OSError, e:
+			except OSError as e:
 				self.error(str(e))
-			except CalledProcessError, e:
+			except CalledProcessError as e:
 				self.error("%s. output:\n%s" % (str(e), e.output))
 		return True # True is required by gnome save-yourself event
 

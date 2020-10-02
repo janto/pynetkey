@@ -135,16 +135,16 @@ def run_client():
 		#~ return
 
 	if not service:
-		print "pynetkey not started."
+		print("pynetkey not started.")
 		parser.print_help()
 		return
 
 	if options.stop:
-		print "closing firewall and stopping pynetkey process. ctrl-c will kill pynetkey process."
+		print("closing firewall and stopping pynetkey process. ctrl-c will kill pynetkey process.")
 		try:
 			service.stop()
 		except KeyboardInterrupt:
-			print "keyboard interrupt. running %s" % str(pkill_command)
+			print("keyboard interrupt. running %s" % str(pkill_command))
 			os.system(pkill_command)
 	#~ elif options.wait_until_started:
 		#~ pass
@@ -169,13 +169,13 @@ def run_client():
 	elif options.close:
 		service.close()
 	elif options.pid: # output must be clean to allow usage by other scripts
-		print service.pid()
+		print(service.pid())
 	elif options.status: # output must be clean to allow usage by other scripts
-		print service.status()
+		print(service.status())
 	elif options.json_status: # output must be clean to allow usage by other scripts
-		print service.json_status()
+		print(service.json_status())
 	elif options.user: # output must be clean to allow usage by other scripts
-		print service.user()
+		print(service.user())
 	else:
 		#~ print "nothing to do"
 		parser.print_help()
