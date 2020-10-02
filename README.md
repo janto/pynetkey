@@ -8,7 +8,9 @@ This program was _<font color="red">not written by IT</font>_ and is not support
 Pynetkey's main goals are to be more robust and attractive (it sits in the system tray) than the existing inetkey/sinetkey. It also runs on both Windows and Linux systems. Pynetkey is released under the GPL.
 
 Main site: https://github.com/janto/pynetkey
+
 Bugs and feature requests go here https://github.com/janto/pynetkey/issues
+
 If you need help, email me (Janto Dreijer) at jantod@gmail.com
 
 ## Installation
