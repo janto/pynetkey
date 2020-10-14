@@ -1,5 +1,4 @@
-
-# Pynetkey
+# Pynetkey ![alt text](icons/pynetkey-main.svg)
 
 **Note:**
 _It's been a long time since I've updated pynetkey. It should still work, but some things below (like the installation instructions) are probably no longer valid. I suggest getting the latest source from [https://github.com/janto/pynetkey](https://github.com/janto/pynetkey) and trying that. Also if you want to open the firewall from the terminal use the `cli.py` file._
